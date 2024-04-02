@@ -29,7 +29,6 @@ import okhttp3.Response;
 public class ProfileActivity extends AppCompatActivity {
 
     private OkHttpClient client;
-    //private String url = "http://10.0.2.2:5000/userInfo";  //no clue if this is correct
     private EditText txtFirstName;
     private EditText txtLastName;
     private EditText txtEmail;

@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.myapplication.Helper;
 import com.example.myapplication.MainActivity;
 import com.example.myapplication.R;
 import com.example.myapplication.ui.signup.SignupActivity;
@@ -31,7 +32,6 @@ import okhttp3.Response;
 public class LoginActivity extends AppCompatActivity {
 
     private OkHttpClient client;
-    private String url = "http://10.0.2.2:5000/login";
 
     private EditText editTextUsername;
     private EditText editTextPassword;
@@ -83,7 +83,7 @@ public class LoginActivity extends AppCompatActivity {
 
         RequestBody body = RequestBody.create(jsonObject.toString(), JSON); // Create request body
         okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(url)
+                .url(Helper.URL + "/login")
                 .post(body)
                 .build();
 

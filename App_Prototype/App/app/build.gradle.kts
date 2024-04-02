@@ -40,6 +40,10 @@ android {
         create("py311") { dimension = "pyVersion" }
     }
 
+    buildFeatures {
+        viewBinding = true
+    }
+
     chaquopy {
         productFlavors {
             getByName("py310") { version = "3.10" }
@@ -53,6 +57,7 @@ android {
             pip {
                 // A requirement specifier, with or without a version number:
                 install("numpy")
+                install("matplotlib")
             }
         }
 
