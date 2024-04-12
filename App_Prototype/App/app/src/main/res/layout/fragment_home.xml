@@ -48,7 +48,7 @@
                 android:layout_height="wrap_content"
                 android:text="ToggleButton"
                 android:textOff="Graph"
-                android:textOn="Risk" />
+                android:textOn="Heatmap" />
 
 
             <ImageView

@@ -51,13 +51,14 @@ android {
         }
 
         defaultConfig {
-            version = "3.8"
-            buildPython("C:/Users/cxwin/AppData/Local/Programs/Python/Python311/python.exe")
+            version = "3.10"
+            buildPython("C:/Users/cxwin/AppData/Local/Programs/Python/Python310/python.exe")
 
             pip {
                 // A requirement specifier, with or without a version number:
                 install("numpy")
                 install("matplotlib")
+                install("Pillow")
             }
         }
 

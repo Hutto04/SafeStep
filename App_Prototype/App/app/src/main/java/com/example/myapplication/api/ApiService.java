@@ -111,7 +111,7 @@ public class ApiService {
      * @param jsonObject The JSON object containing the profile information to be posted
      * @param callback The callback to be called when the request is completed
      */
-    public void postProfileInformation(String token, JSONObject jsonObject, ApiCallback callback) {
+    public void updateProfileInformation(String token, JSONObject jsonObject, ApiCallback callback) {
         MediaType JSON = MediaType.parse("application/json; charset=utf-8"); // Set JSON media type
 
         RequestBody body = RequestBody.create(jsonObject.toString(), JSON); // Create request body
@@ -119,7 +119,7 @@ public class ApiService {
         Request request = new Request.Builder()
                 .url(Helper.URL + "/profile")
                 .addHeader("Authorization", "Bearer " + token) // authorization header
-                .post(body)
+                .put(body)
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
@@ -144,6 +144,7 @@ public class ApiService {
             }
         });
     }
+
 
     public interface ApiCallback {
         void onSuccess(String response);

@@ -78,6 +78,7 @@ public class HomeFragment extends Fragment {
         ToggleButton toggleButton = view.findViewById(R.id.toggleButton);
 
         ImageView imageViewGraph = view.findViewById(R.id.imageViewGraph);
+        ImageView imageView2 = view.findViewById(R.id.imageView2);
 
         getButton.setOnClickListener(v -> {
             Log.d("HomeFragment", "GET Button clicked");
@@ -99,15 +100,6 @@ public class HomeFragment extends Fragment {
             bluetoothService.getBluetoothDevices();
         });
 
-        toggleButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Log.d("HomeFragment", "Toggle Button clicked");
-            if (isChecked) {
-                Log.d("HomeFragment", "Toggle Button is ON");
-            } else {
-                Log.d("HomeFragment", "Toggle Button is OFF");
-            }
-        });
-
         // Start Python -
         if (! Python.isStarted()) {
             Python.start(new AndroidPlatform(requireContext()));
@@ -120,9 +112,101 @@ public class HomeFragment extends Fragment {
         int[] numList = {1, 3, 2, 5, 9};
         System.out.println("The Function Call's Return Value: " + myFnCallVale.call(numList).toString());
 
-        // Get the chart
-        getChart();
+        // Get the chart when the toggle button is clicked
+        toggleButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Log.d("HomeFragment", "Toggle Button clicked");
+            if (isChecked) {
+                // heatmap
+                getHeatMap();
+                // remove image
+                imageView2.setVisibility(View.GONE);
+                Log.d("HomeFragment", "Toggle Button is ON");
+            } else {
+                getChart();
+                // bring back image
+                imageView2.setVisibility(View.VISIBLE);
+                Log.d("HomeFragment", "Toggle Button is OFF");
+            }
+        });
+
+        getChart(); // Get the chart when the user first opens the app
         return view;
+    }
+
+    private void getHeatMap() {
+        // Get data from DB
+        apiService.getUserData(Helper.getToken(requireContext()), new ApiService.ApiCallback() {
+            @Override
+            public void onSuccess(String response) {
+                Log.d("HomeFragment", "Response: " + response);
+                requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), response, Toast.LENGTH_SHORT).show());
+
+                try {
+                    // Parse the JSON response
+                    JSONArray jsonArray = new JSONArray(response);
+
+                    // Get the first object in the array
+                    if (jsonArray.length() == 0) {
+                        // TODO: tell the user that there is no data available
+                        Log.d("HomeFragment", "No pressure data available");
+                        return;
+                    }
+
+                    JSONObject jsonObject = jsonArray.getJSONObject(0);
+                    JSONObject pressureData = jsonObject.getJSONObject("pressure_data");
+
+                    Log.d("HomeFragment", "JSON Object: " + jsonObject);
+                    Log.d("HomeFragment", "Pressure Data: " + pressureData);
+
+                    // Convert JSONArrays to Python lists
+                    // TODO: have a left and right foot pressure data
+                    // Extract pressure data for each point
+                    double mtk_1 = pressureData.getDouble("MTK-1");
+                    double mtk_2 = pressureData.getDouble("MTK-2");
+                    double mtk_3 = pressureData.getDouble("MTK-3");
+                    double mtk_4 = pressureData.getDouble("MTK-4");
+                    double mtk_5 = pressureData.getDouble("MTK-5");
+                    double d1 = pressureData.getDouble("D1");
+                    double lateral = pressureData.getDouble("Lateral");
+                    double calcaneus = pressureData.getDouble("Calcaneus");
+
+                    Log.d("HomeFragment", "MTK-1: " + mtk_1);
+                    Log.d("HomeFragment", "MTK-2: " + mtk_2);
+                    Log.d("HomeFragment", "MTK-3: " + mtk_3);
+                    Log.d("HomeFragment", "MTK-4: " + mtk_4);
+                    Log.d("HomeFragment", "MTK-5: " + mtk_5);
+                    Log.d("HomeFragment", "D1: " + d1);
+                    Log.d("HomeFragment", "Lateral: " + lateral);
+                    Log.d("HomeFragment", "Calcaneus: " + calcaneus);
+
+                    // Generate the graph using Chaquopy
+                    Python py = Python.getInstance();
+                    PyObject myModule = py.getModule("heatmap");
+                    PyObject heatmapBytes = myModule.callAttr("generate_heatmap",
+                            mtk_1, mtk_2, mtk_3, mtk_4, mtk_5, d1, lateral, calcaneus,
+                            mtk_1, mtk_2, mtk_3, mtk_4, mtk_5, d1, lateral, calcaneus);
+
+                    // Convert the bytes to a byte array
+                    byte[] heatmapData = heatmapBytes.toJava(byte[].class);
+
+                    // Create a Bitmap from the byte array
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(heatmapData, 0, heatmapData.length);
+
+                    // TODO: Cache the bitmap to avoid regenerating it every time, only regenerate when new data is available or on a schedule (like every 30 minutes)
+                    // Set the bitmap to the ImageView on the main thread
+                    ImageView imageViewGraph = getView().findViewById(R.id.imageViewGraph);
+                    requireActivity().runOnUiThread(() -> imageViewGraph.setImageBitmap(bitmap));
+                } catch (Exception e) {
+                    Log.e("HomeFragment", "Error parsing JSON", e);
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.d("HomeFragment", "Error: " + errorMessage);
+                requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show());
+            }
+        });
     }
 
     private void getChart() {
@@ -136,6 +220,14 @@ public class HomeFragment extends Fragment {
                 try {
                     // Parse the JSON response
                     JSONArray jsonArray = new JSONArray(response);
+
+                    // Get the first object in the array
+                    if (jsonArray.length() == 0) {
+                        // TODO: tell the user that there is no data available
+                        Log.d("HomeFragment", "No pressure data available");
+                        return;
+                    }
+
                     JSONObject jsonObject = jsonArray.getJSONObject(0);
                     JSONObject pressureData = jsonObject.getJSONObject("pressure_data");
 
