@@ -77,7 +77,7 @@ public class ProfileFragment extends Fragment {
         // debug
         Log.d("ProfileFragment", "Sending: " + jsonObject);
 
-        apiService.postProfileInformation(token, jsonObject, new ApiService.ApiCallback() {
+        apiService.updateProfileInformation(token, jsonObject, new ApiService.ApiCallback() {
             @Override
             public void onSuccess(String response) {
                 Log.d("ProfileFragment", "Response: " + response);
