@@ -50,7 +50,19 @@ def init_app_routes(app):
         user_document = {
             'username': username,
             'password': hashed_password,  # Store the hashed password
-            'createdDate': datetime.utcnow()  # Current date and time
+            'createdDate': datetime.utcnow() - timedelta(hours=4),  # adjusted for timezone, mongo stores in UTC by default
+            'profile': {
+                'name': '',
+                'email': '',
+                'phone': '',
+                'age': '',
+                'height': '',
+                'weight': '',
+                'doctor': '',
+                'doctor_email': '',
+                'emergency_contact': '',
+            }
+
         }
 
         # Insert the new user into the database
@@ -134,6 +146,33 @@ def init_app_routes(app):
 
 
     """
+    @desc: This route is used to retrieve the most recent data entry for a specific user
+    @route: /data/latest
+    @method: GET
+    @access: Private - should only retrieve data for the user after authentication
+    @return: JSON object containing the most recent data entry for the user
+    """
+    @app.route('/data/latest', methods=['GET'])
+    @token_required  # this is a decorator that checks for a valid token before allowing access to the route
+    def get_latest_data(current_user):
+        # Directly use mongo.db to access the database
+        data_collection = mongo.db.data
+
+        # get the user's ID from the token
+        user_id = current_user.get('_id')
+        try:
+            # Find the most recent data entry for the user (found by user_id) and sort by timestamp (most recent first)
+            data = list(data_collection.find({"user_id": user_id}).sort([("timestamp", -1)]).limit(1))
+            # Convert the ObjectId to string
+            data = convert_oid(data)
+        except Exception as e:
+            print(e)
+            return jsonify({"message": "An error occurred while retrieving data from the database."})
+
+        return jsonify(data), 200
+
+
+    """
     @desc: This route is used to insert data into the data collection for a specific user
     @route: /data
     @method: POST
@@ -147,8 +186,12 @@ def init_app_routes(app):
 
         user_id = current_user.get('_id')
 
+        # print body for debugging
+        print(request.json)
+
         # Generate random pressure data - placeholder for now.
         # TODO: Replace this with actual pressure data from the sensors - so needs to be sent from the phone as json
+        # Body currently has a unused JSON object for this
         data = {
             "pressure_data": {
                 "MTK-1": random.randint(0, 100),
@@ -163,7 +206,7 @@ def init_app_routes(app):
             "temperature_data": {
                 "Temperature": random.randint(0, 100),
             },
-            "timestamp": datetime.utcnow(),  # Include a timestamp for each set of readings to simulate intervals
+            "timestamp": datetime.utcnow() - timedelta(hours=4),  # adjusted for timezone, mongo stores in UTC by default
             # Need to include the user's ID
             "user_id": user_id
         }
@@ -183,6 +226,64 @@ def init_app_routes(app):
         except Exception as e:
             print(e)
             return jsonify({"message": "An error occurred while inserting data into the database."})
+
+
+    """
+    @desc: This route is used to update the user's profile information
+    @route: /profile
+    @method: PUT
+    @access: Private - should only update the user's profile after authentication
+    @return: JSON object containing a message indicating the success or failure of the update
+    """
+    @app.route('/profile', methods=['PUT'])
+    @token_required
+    def update_profile(current_user):
+        user_collection = mongo.db.users
+
+        user_id = current_user.get('_id')
+
+        # Get the new user data
+        new_data = request.json
+
+        # Check if the new data is empty
+        if not new_data:
+            return jsonify({"message": "No data provided."}), 400
+
+        # Update the user's profile
+        try:
+            user_collection.update_one({"_id": user_id}, {"$set": {"profile": new_data}})
+            return jsonify({"message": "Profile updated successfully."}), 200
+        except Exception as e:
+            print(e)
+            return jsonify({"message": "An error occurred while updating the profile."})
+
+
+    """
+    @desc: This route is used to get the user's profile information
+    @route: /profile
+    @method: GET
+    @access: Private - should only retrieve the user's profile after authentication
+    @return: JSON object containing the user's profile information
+    """
+    app.route('/profile', methods=['GET'])
+    @token_required
+    def get_profile(current_user):
+        user_collection = mongo.db.users
+
+        user_id = current_user.get('_id')
+
+        # Get the user's profile
+        try:
+            user = user_collection.find_one({"_id": user_id})
+            # Convert the ObjectId to string
+            user = convert_oid(user)
+            profile = user.get('profile')
+            return jsonify(profile), 200
+        except Exception as e:
+            print(e)
+            return jsonify({"message": "An error occurred while retrieving the profile."})
+
+
 
 
 
