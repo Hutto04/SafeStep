@@ -64,12 +64,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     private void setupUIAfterBluetoothCheck() {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
             // Permission is not granted
             // Request the BLUETOOTH_CONNECT permission
             ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.BLUETOOTH_CONNECT}, 1);
+                    new String[]{android.Manifest.permission.BLUETOOTH}, 1);
             Log.d("MainActivity", "Permission not granted for BLUETOOTH_CONNECT");
             return;
         }
@@ -98,13 +99,13 @@ public class MainActivity extends AppCompatActivity {
         int socksCount = 0;
         for (BluetoothDevice device : pairedDevices) {
             // TODO: Either change the device name or look for the GATT service (environmental sensing service)
-            if (device.getName().contains("SmartSock")) { // Check device names that match your criteria
+            if (device.getName().contains("Pico")) { // Check device names that match your criteria
                 socksCount++;
             }
             Log.d("MainActivity", "Paired device: " + device.getName() + " " + device.getAddress());
         }
 
-        //SMART_SOCKS_PAIRED = socksCount >= 2;
+        SMART_SOCKS_PAIRED = socksCount >= 1;
         if (SMART_SOCKS_PAIRED) {
             showHomeFragment();
         } else {
