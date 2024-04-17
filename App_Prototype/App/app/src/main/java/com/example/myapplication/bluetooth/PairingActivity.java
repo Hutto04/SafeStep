@@ -177,7 +177,11 @@ public class PairingActivity extends AppCompatActivity {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.d("PairingActivity", "Services discovered: " + gatt.getServices());
-                enableTemperatureNotifications(gatt);
+                // if environment service is found, enable notifications for temperature and pressure
+                if (gatt.getService(ENVIRONMENT_SERVICE_UUID) != null) {
+                    enableTemperatureNotifications(gatt);
+                    enablePressureNotifications(gatt);
+                }
             }
         }
 
@@ -191,6 +195,16 @@ public class PairingActivity extends AppCompatActivity {
                     float temperature = tempValue / 100.0f;
                     Log.d("PairingActivity", "Temperature updated: " + temperature + "°C");
                 }
+
+                // pressure characteristic
+            } else if (PRESSURE_CHARACTERISTIC_UUID.equals(characteristicUUID)) {
+                Integer pressureValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, 0);
+                if (pressureValue != null) {
+                    float pressure = pressureValue * 1.0f;
+                    Log.d("PairingActivity", "Pressure updated: " + pressure + " units");
+                } else {
+                    Log.w("PairingActivity", "Failed to read pressure value.");
+                }
             }
         }
     };
@@ -202,6 +216,19 @@ public class PairingActivity extends AppCompatActivity {
             if (temperatureCharacteristic != null) {
                 gatt.setCharacteristicNotification(temperatureCharacteristic, true);
                 BluetoothGattDescriptor descriptor = temperatureCharacteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                gatt.writeDescriptor(descriptor);
+            }
+        }
+    }
+
+    private void enablePressureNotifications(BluetoothGatt gatt) {
+        BluetoothGattService environmentService = gatt.getService(ENVIRONMENT_SERVICE_UUID);
+        if (environmentService != null) {
+            BluetoothGattCharacteristic pressureCharacteristic = environmentService.getCharacteristic(PRESSURE_CHARACTERISTIC_UUID);
+            if (pressureCharacteristic != null) {
+                gatt.setCharacteristicNotification(pressureCharacteristic, true);
+                BluetoothGattDescriptor descriptor = pressureCharacteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
                 descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                 gatt.writeDescriptor(descriptor);
             }
