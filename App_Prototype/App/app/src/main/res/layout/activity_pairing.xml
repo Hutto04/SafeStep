@@ -44,7 +44,7 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="329dp">
+            android:layout_height="254dp">
 
             <ListView
                 android:id="@+id/pairingListView"
@@ -62,6 +62,13 @@
             android:layout_height="wrap_content"
             app:contentDescription="Friendly Robot Welcome"
             app:srcCompat="@drawable/robot" />
+
+        <Button
+            android:id="@+id/rescanButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Rescan" />
 
     </LinearLayout>
 

@@ -115,7 +115,6 @@ public class ApiService {
         MediaType JSON = MediaType.parse("application/json; charset=utf-8"); // Set JSON media type
 
         RequestBody body = RequestBody.create(jsonObject.toString(), JSON); // Create request body
-        // TODO: Change the URL to the correct endpoint when created
         Request request = new Request.Builder()
                 .url(Helper.URL + "/profile")
                 .addHeader("Authorization", "Bearer " + token) // authorization header

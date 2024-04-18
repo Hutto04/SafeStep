@@ -28,7 +28,7 @@ import com.example.myapplication.ui.profile.ProfileFragment;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
-    private static boolean SMART_SOCKS_PAIRED = false;  // Debug
+    private static boolean SMART_SOCKS_PAIRED = true;  // Debug
     ActivityMainBinding binding;
     private BluetoothAdapter bluetoothAdapter;
 
@@ -55,8 +55,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (!bluetoothAdapter.isEnabled()) {
-            // Request the user to enable Bluetooth
+            // Request to enable Bluetooth
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.BLUETOOTH}, 1);
+                return;
+            }
             startActivityForResult(enableBtIntent, 1);
             Log.d("MainActivity", "Bluetooth is not enabled");
         } else {
@@ -67,8 +72,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupUIAfterBluetoothCheck() {
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
-            // Permission is not granted
-            // Request the BLUETOOTH_CONNECT permission
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.BLUETOOTH}, 1);
             Log.d("MainActivity", "Permission not granted for BLUETOOTH_CONNECT");
@@ -87,31 +90,40 @@ public class MainActivity extends AppCompatActivity {
                 // Permission was granted, setup the Bluetooth connection.
                 Log.d("MainActivity", "Permission granted for BLUETOOTH_CONNECT, calling initializeBluetooth()");
                 initializeBluetooth();
-            } else {
-                // Permission denied, disable the functionality that depends on this permission.
-                Toast.makeText(this, "Permission denied to use Bluetooth", Toast.LENGTH_SHORT).show();
+            }  else {
+                Log.d("MainActivity", "Permission denied for BLUETOOTH_CONNECT");
+                // ask for permission again
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.BLUETOOTH}, 1);
             }
         }
     }
 
+
     private void initializeBluetooth() {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.BLUETOOTH}, 1);
+            return;
+        }
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+
         int socksCount = 0;
         for (BluetoothDevice device : pairedDevices) {
             // TODO: Either change the device name or look for the GATT service (environmental sensing service)
-            if (device.getName().contains("Pico")) { // Check device names that match your criteria
+            if (device.getName().contains("Pico")) { // check for the 'smart socks', i guess
                 socksCount++;
             }
             Log.d("MainActivity", "Paired device: " + device.getName() + " " + device.getAddress());
         }
 
-        SMART_SOCKS_PAIRED = socksCount >= 1;
+        //SMART_SOCKS_PAIRED = socksCount >= 1;
         if (SMART_SOCKS_PAIRED) {
             showHomeFragment();
         } else {
             Toast.makeText(this, "Please pair and connect both SmartSocks", Toast.LENGTH_LONG).show();
             Log.d("MainActivity", "Please pair and connect both SmartSocks");
-            // Try to pair the SmartSocks
+            // Move to Pairing Activity to pair the 'socks'
             Intent intent = new Intent(this, PairingActivity.class);
             startActivity(intent);
         }
