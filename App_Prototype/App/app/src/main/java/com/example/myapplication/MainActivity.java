@@ -18,18 +18,20 @@ import android.widget.Toast;
 
 import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
-import com.example.myapplication.bluetooth.PairingActivity;
+import com.example.myapplication.bluetooth.BluetoothService;
+import com.example.myapplication.bluetooth.PairingFragment;
 import com.example.myapplication.databinding.ActivityMainBinding;
 import com.example.myapplication.ui.SettingsFragment;
 import com.example.myapplication.ui.debug.DebugFragment;
 import com.example.myapplication.ui.home.HomeFragment;
 import com.example.myapplication.ui.profile.ProfileFragment;
 
-import java.util.Set;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private static boolean SMART_SOCKS_PAIRED = true;  // Debug
+    private static boolean SMART_SOCKS_PAIRED = false;  // Debug
     ActivityMainBinding binding;
+    private BluetoothService bluetoothService;
     private BluetoothAdapter bluetoothAdapter;
 
     @Override
@@ -39,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         binding.bottomNavigationView.setVisibility(View.GONE);
         //replaceFragment(new HomeFragment()); // Start with the Home Fragment - default
+
+        bluetoothService = BluetoothService.getInstance(this);
 
         // Initialize Python - to call Python functions within Java
         if (!Python.isStarted()) {
@@ -102,32 +106,39 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeBluetooth() {
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.BLUETOOTH}, 1);
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.BLUETOOTH}, 1);
             return;
         }
-        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+        // Retrieve a list of connected Bluetooth devices
+        List<BluetoothDevice> connectedDevices = bluetoothService.getConnectedDevices();
+        Log.d("MainActivity", "Paired devices count: " + connectedDevices.size());
 
         int socksCount = 0;
-        for (BluetoothDevice device : pairedDevices) {
-            // TODO: Either change the device name or look for the GATT service (environmental sensing service)
-            if (device.getName().contains("Pico")) { // check for the 'smart socks', i guess
+        for (BluetoothDevice device : connectedDevices) {
+            if (device.getName() != null && device.getName().contains("Pico")) {
                 socksCount++;
+            } else {
+                if (device.getAddress() != null && device.getAddress().equals(bluetoothService.PICO_MAC_ADDRESS)) {
+                    socksCount++;
+                }
             }
-            Log.d("MainActivity", "Paired device: " + device.getName() + " " + device.getAddress());
+
+            Log.d("MainActivity", "Connected device: " + (device.getName() != null ? device.getName() : "Unknown") + " " + device.getAddress());
         }
 
-        //SMART_SOCKS_PAIRED = socksCount >= 1;
+        SMART_SOCKS_PAIRED = socksCount >= 1;
         if (SMART_SOCKS_PAIRED) {
             showHomeFragment();
         } else {
             Toast.makeText(this, "Please pair and connect both SmartSocks", Toast.LENGTH_LONG).show();
             Log.d("MainActivity", "Please pair and connect both SmartSocks");
-            // Move to Pairing Activity to pair the 'socks'
-            Intent intent = new Intent(this, PairingActivity.class);
-            startActivity(intent);
+            //Move to Pairing Activity to pair the 'socks'
+            //Intent intent = new Intent(this, PairingActivity.class);
+            //startActivity(intent);
+            replaceFragment(new PairingFragment());
         }
     }
+
 
     private void showHomeFragment() {
         replaceFragment(new HomeFragment());

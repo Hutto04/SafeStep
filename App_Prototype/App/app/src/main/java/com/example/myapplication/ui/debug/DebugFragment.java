@@ -63,12 +63,7 @@ import java.util.UUID;
  */
 public class DebugFragment extends Fragment {
     private ApiService apiService;
-
-    private BluetoothAdapter bluetoothAdapter;
-    private BluetoothLeScanner bluetoothLeScanner;
-    UUID BLP_SERVICE_UUID = UUID.fromString("00001810-0000-1000-8000-00805f9b34fb");
-    private static final int PERMISSION_REQUEST_CODE = 101;
-    UUID[] serviceUUIDs = new UUID[]{BLP_SERVICE_UUID};
+    private BluetoothService bluetoothService;
 
     public DebugFragment() {
         // Required empty public constructor
@@ -76,7 +71,7 @@ public class DebugFragment extends Fragment {
 
 
     // TODO: Rename and change types and number of parameters
-    public static DebugFragment newInstance(String param1, String param2) {
+    public static DebugFragment newInstance() {
         DebugFragment fragment = new DebugFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
@@ -87,32 +82,20 @@ public class DebugFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         apiService = apiService.getInstance();
-        initializeBluetooth();
-    }
-
-    private void initializeBluetooth() {
-        BluetoothManager bluetoothManager = (BluetoothManager) getActivity().getSystemService(Context.BLUETOOTH_SERVICE);
-        bluetoothAdapter = bluetoothManager.getAdapter();
-        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-            Toast.makeText(getActivity(), "Bluetooth is disabled or not available", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+        bluetoothService = BluetoothService.getInstance(requireContext());
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_debug, container, false);
-
-        Button scanButton = view.findViewById(R.id.bleScanButton);
-        scanButton.setOnClickListener(v -> checkPermissionsAndStartScan());
 
 
         Button getButton = view.findViewById(R.id.getButton);
         Button postButton = view.findViewById(R.id.postButton);
         Button pairedButton = view.findViewById(R.id.pairedButton);
+        Button scanButton = view.findViewById(R.id.bleScanButton);
+
         ToggleButton toggleButton = view.findViewById(R.id.toggleButton);
 
         ImageView imageViewGraph = view.findViewById(R.id.imageViewGraph);
@@ -130,8 +113,15 @@ public class DebugFragment extends Fragment {
 
         pairedButton.setOnClickListener(v -> {
             Log.d("HomeFragment", "Paired Button clicked");
-
         });
+
+        scanButton.setOnClickListener(v -> {
+            float pressure = bluetoothService.getLatestPressure();
+            float temp = bluetoothService.getLatestTemperature();
+            Log.d("Debug", "Pressure: " + pressure);
+            Log.d("Debug", "Temperature: " + temp);
+        });
+
 
         // Start Python -
         if (!Python.isStarted()) {
@@ -165,69 +155,6 @@ public class DebugFragment extends Fragment {
         getChart(); // Get the chart when the user first opens the app
         return view;
     }
-
-    private void checkPermissionsAndStartScan() {
-        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-
-            requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH, Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_CODE);
-        } else {
-            startScanning();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startScanning();
-            } else {
-                //Toast.makeText(getActivity(), "Permissions are required to scan for Bluetooth devices.", Toast.LENGTH_SHORT).show();
-                Log.d("DebugFragment", "Permissions are required to scan for Bluetooth devices.");
-            }
-        }
-    }
-
-    private void startScanning() {
-        if (bluetoothLeScanner != null) {
-            List<ScanFilter> filters = new ArrayList<>();
-            filters.add(new ScanFilter.Builder().setServiceUuid(new ParcelUuid(BLP_SERVICE_UUID)).build());
-            ScanSettings settings = new ScanSettings.Builder()
-                    .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
-                    .build();
-            bluetoothLeScanner.startScan(filters, settings, scanCallback);
-            Toast.makeText(getActivity(), "Scanning started...", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private final ScanCallback scanCallback = new ScanCallback() {
-        @Override
-        public void onScanResult(int callbackType, ScanResult result) {
-            BluetoothDevice device = result.getDevice();
-            Log.d("DebugFragment", "Found device: " + device.getName() + " (" + device.getAddress() + ")");
-        }
-
-        @Override
-        public void onBatchScanResults(List<ScanResult> results) {
-            for (ScanResult result : results) {
-                onScanResult(ScanSettings.CALLBACK_TYPE_ALL_MATCHES, result);
-            }
-        }
-
-        @Override
-        public void onScanFailed(int errorCode) {
-            Toast.makeText(getActivity(), "Scan failed with error: " + errorCode, Toast.LENGTH_SHORT).show();
-        }
-    };
-
-
-
-
-
-
-
-
-
 
 
     private void getHeatMap() {

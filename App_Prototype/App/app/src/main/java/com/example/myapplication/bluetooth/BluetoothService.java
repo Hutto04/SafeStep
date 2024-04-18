@@ -29,6 +29,7 @@ import java.util.UUID;
 
 public class BluetoothService {
     private static BluetoothService instance;
+    private ConnectionListener connectionListener;
     private float latestTemperature;
     private float latestPressures;
     private static final UUID UUID_ENV_SENSE_SERVICE = UUID.fromString("00001810-0000-1000-8000-00805f9b34fb");
@@ -42,6 +43,7 @@ public class BluetoothService {
     public boolean isScanning;
     private final List<String> deviceList = new ArrayList<>();
     private OnDeviceFoundListener onDeviceFoundListener;
+    public final String PICO_MAC_ADDRESS = "28:CD:C1:06:FC:42";
 
     public interface OnDeviceFoundListener {
         void onDeviceFound(String deviceInfo);
@@ -117,7 +119,7 @@ public class BluetoothService {
                 return;
             }
             String deviceInfo = device.getName() + "\n" + device.getAddress();
-            if (!deviceList.contains(deviceInfo) && device.getName() != null) {
+            if (!deviceList.contains(deviceInfo) && device.getAddress().equals(PICO_MAC_ADDRESS)) {
                 Log.d("Bluetooth", "Found device: " + deviceInfo);
                 deviceList.add(deviceInfo);
                 if (onDeviceFoundListener != null) {
@@ -142,6 +144,10 @@ public class BluetoothService {
         Log.d("Bluetooth", "Connecting to GATT server");
     }
 
+    public void setConnectionListener(ConnectionListener listener) {
+        this.connectionListener = listener;
+    }
+
     private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -153,8 +159,14 @@ public class BluetoothService {
                     return;
                 }
                 bluetoothGatt.discoverServices();
+                if (connectionListener != null) {
+                    connectionListener.onDeviceConnected();
+                }
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.d("Bluetooth", "Disconnected from GATT server.");
+                if (connectionListener != null) {
+                    connectionListener.onDeviceDisconnected();
+                }
             }
         }
 
@@ -178,12 +190,14 @@ public class BluetoothService {
                 Integer tempValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, 0);
                 if (tempValue != null) {
                     float temperature = tempValue / 100.0f;
+                    latestTemperature = temperature;
                     Log.d("Bluetooth", "Temperature updated: " + temperature + "°C");
                 }
             } else if (UUID_PRESSURE_CHAR.equals(characteristicUUID)) {
                 Integer pressureValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT32, 0);
                 if (pressureValue != null) {
                     float pressure = pressureValue / 1000.0f;  // Convert from Pascals to kilopascals (kPa)?
+                    latestPressures = pressure;
                     Log.d("Bluetooth", "Pressure updated: " + pressure + " kPa");
                 } else {
                     Log.w("Bluetooth", "Failed to read pressure value.");
@@ -240,6 +254,23 @@ public class BluetoothService {
             bluetoothGatt = null;
         }
     }
+
+    public List<BluetoothDevice> getConnectedDevices() {
+        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        if (bluetoothManager == null) {
+            Log.e("BluetoothService", "BluetoothManager not initialized");
+            return new ArrayList<>();
+        }
+
+        // Get connected devices for the GATT profile
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+            Log.w("BluetoothService", "getConnectedDevices - Bluetooth scan permission not granted");
+            ActivityCompat.requestPermissions((PairingActivity) context, new String[]{Manifest.permission.BLUETOOTH}, 1);
+            return new ArrayList<>();
+        }
+        return bluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
+    }
+
 
     public void setOnDeviceFoundListener(OnDeviceFoundListener listener) {
         this.onDeviceFoundListener = listener;
