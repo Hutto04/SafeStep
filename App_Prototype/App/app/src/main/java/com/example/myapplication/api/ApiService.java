@@ -106,6 +106,41 @@ public class ApiService {
     }
 
     /**
+     * This method sends a GET request to the server to get the user's profile information
+     * @param token The token of the user
+     * @param callback The callback to be called when the request is completed
+     */
+    public void getProfileInformation(String token, ApiCallback callback) {
+        Request request = new Request.Builder()
+                .url(Helper.URL + "/profile")
+                .addHeader("Authorization", "Bearer " + token)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                e.printStackTrace();
+                callback.onFailure("Request failed");
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                try {
+                    if (response.isSuccessful()) {
+                        String responseString = response.body().string();
+                        Log.d("ApiService", "getProfileInformation: " + responseString);
+                        callback.onSuccess(responseString);
+                    } else {
+                        callback.onFailure("Request failed with code: " + response.code());
+                    }
+                } finally {
+                    response.close();
+                }
+            }
+        });
+    }
+
+    /**
      * This method sends a POST request to the server to post the user's profile information
      * @param token The token of the user
      * @param jsonObject The JSON object containing the profile information to be posted

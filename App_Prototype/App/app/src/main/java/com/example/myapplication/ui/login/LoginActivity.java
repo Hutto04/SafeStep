@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.myapplication.Helper;
 import com.example.myapplication.MainActivity;
 import com.example.myapplication.R;
+import com.example.myapplication.api.ApiService;
 import com.example.myapplication.ui.signup.SignupActivity;
 
 import org.json.JSONException;
@@ -37,6 +38,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText editTextPassword;
     private Button buttonLogin;
     private TextView textViewRegister;
+    private ApiService apiService;
 
 
     @Override
@@ -45,6 +47,8 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         client = new OkHttpClient();
+
+        apiService = ApiService.getInstance();
 
         editTextUsername = findViewById(R.id.editTextUsername);
         editTextPassword = findViewById(R.id.editTextPassword);
@@ -114,6 +118,9 @@ public class LoginActivity extends AppCompatActivity {
                         // log token
                         Log.d("LoginActivity", "Token: " + token);
 
+                        // Get profile info from DB if any
+                        getProfileInformation(token);
+
                         runOnUiThread(() -> {
                             Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
@@ -128,6 +135,49 @@ public class LoginActivity extends AppCompatActivity {
                     // Handle login failure (e.g., incorrect credentials)
                     runOnUiThread(() -> Toast.makeText(LoginActivity.this, "Invalid username or password", Toast.LENGTH_SHORT).show());
                 }
+            }
+        });
+    }
+
+    private void getProfileInformation(String token) {
+        apiService.getProfileInformation(token, new ApiService.ApiCallback() {
+            @Override
+            public void onSuccess(String responseString) {
+                try {
+                    JSONObject jsonObject = new JSONObject(responseString);
+                    Log.d("LoginActivity", "Full JSON Response: " + jsonObject.toString(2));
+
+                    String username = jsonObject.optString("username", "");
+                    String email = jsonObject.optString("email", "");
+                    String dob = jsonObject.optString("dob", "");
+                    String weight = jsonObject.optString("weight", "");
+                    String height = jsonObject.optString("height", "");
+                    String doctorName = jsonObject.optString("doctor_name", "");
+                    String doctorEmail = jsonObject.optString("doctor_email", "");
+
+                    // Save profile info to shared preferences
+                    SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref", MODE_PRIVATE);
+                    SharedPreferences.Editor myEdit = sharedPreferences.edit();
+                    myEdit.putString("username", username);
+                    myEdit.putString("email", email);
+                    myEdit.putString("dob", dob);
+                    myEdit.putString("weight", weight);
+                    myEdit.putString("height", height);
+                    myEdit.putString("doctor_name", doctorName);
+                    myEdit.putString("doctor_email", doctorEmail);
+                    myEdit.apply();
+
+                    runOnUiThread(() -> Toast.makeText(LoginActivity.this, "Profile loaded", Toast.LENGTH_SHORT).show());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    runOnUiThread(() -> Toast.makeText(LoginActivity.this, "Failed to parse profile data", Toast.LENGTH_SHORT).show());
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.d("LoginActivity", "Profile load error: " + errorMessage);
+                runOnUiThread(() -> Toast.makeText(LoginActivity.this, "Failed to load profile data", Toast.LENGTH_SHORT).show());
             }
         });
     }

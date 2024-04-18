@@ -54,13 +54,11 @@ def init_app_routes(app):
             'profile': {
                 'name': '',
                 'email': '',
-                'phone': '',
-                'age': '',
+                'dob': '',
                 'height': '',
                 'weight': '',
                 'doctor': '',
                 'doctor_email': '',
-                'emergency_contact': '',
             }
 
         }
@@ -227,37 +225,6 @@ def init_app_routes(app):
             print(e)
             return jsonify({"message": "An error occurred while inserting data into the database."})
 
-
-    """
-    @desc: This route is used to update the user's profile information
-    @route: /profile
-    @method: PUT
-    @access: Private - should only update the user's profile after authentication
-    @return: JSON object containing a message indicating the success or failure of the update
-    """
-    @app.route('/profile', methods=['PUT'])
-    @token_required
-    def update_profile(current_user):
-        user_collection = mongo.db.users
-
-        user_id = current_user.get('_id')
-
-        # Get the new user data
-        new_data = request.json
-
-        # Check if the new data is empty
-        if not new_data:
-            return jsonify({"message": "No data provided."}), 400
-
-        # Update the user's profile
-        try:
-            user_collection.update_one({"_id": user_id}, {"$set": {"profile": new_data}})
-            return jsonify({"message": "Profile updated successfully."}), 200
-        except Exception as e:
-            print(e)
-            return jsonify({"message": "An error occurred while updating the profile."})
-
-
     """
     @desc: This route is used to get the user's profile information
     @route: /profile
@@ -265,11 +232,10 @@ def init_app_routes(app):
     @access: Private - should only retrieve the user's profile after authentication
     @return: JSON object containing the user's profile information
     """
-    app.route('/profile', methods=['GET'])
+    @app.route('/profile', methods=['GET'])
     @token_required
     def get_profile(current_user):
         user_collection = mongo.db.users
-
         user_id = current_user.get('_id')
 
         # Get the user's profile
@@ -284,6 +250,53 @@ def init_app_routes(app):
             return jsonify({"message": "An error occurred while retrieving the profile."})
 
 
+    """
+    @desc: This route is used to update the user's profile information
+    @route: /profile
+    @method: PUT
+    @access: Private - should only update the user's profile after authentication
+    @return: JSON object containing a message indicating the success or failure of the update
+    """
 
+    @app.route('/profile', methods=['PUT'])
+    @token_required
+    def update_profile(current_user):
+        user_collection = mongo.db.users
+        user_id = current_user.get('_id')
 
+        # Get the new user data from the request JSON
+        new_data = request.json
 
+        # Check if the new data is empty
+        if not new_data:
+            return jsonify({"message": "No data provided."}), 400
+
+        # Build a dynamic update object
+        update_data = {}
+        allowed_fields = ['name', 'name', 'dob', 'height', 'weight', 'doctor_name', 'doctor_email']
+
+        # Iterate over allowed fields and add them to the update_data dictionary if they are in new_data
+        for field in allowed_fields:
+            if field in new_data:
+                # Add the field to the update_data dictionary w/ the correct key
+                update_data[f"profile.{field}"] = new_data[field]
+
+        # If update_data is empty, that means no valid fields were provided
+        if not update_data:
+            return jsonify({"message": "No valid fields provided for update."}), 400
+
+        # Update the user's profile
+        try:
+            # Only update the fields that were provided
+            update_result = user_collection.update_one(
+                {"_id": user_id},
+                {"$set": update_data}
+            )
+
+            if update_result.modified_count == 0:
+                return jsonify({"message": "No changes made to the profile."}), 200
+
+            return jsonify({"message": "Profile updated successfully."}), 200
+        except Exception as e:
+            print(e)
+            return jsonify({"message": "An error occurred while updating the profile."}), 500
