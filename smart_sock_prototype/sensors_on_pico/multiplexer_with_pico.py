@@ -32,7 +32,7 @@ def loop():
     # Reports back Value at channel 6 is: 346
     for i in range(16):
         fsr_reading = read_mux(i)
-        #fsr_reading = raw_pressure_to_newtons(fsr_reading)
+        fsr_reading = raw_pressure_to_newtons(fsr_reading)
         print("sensor ", i, " : ", fsr_reading)
         #time.sleep(1)  # Delay for 1 second
     time.sleep(.5)
@@ -85,7 +85,10 @@ def raw_pressure_to_newtons(raw_pressure):
     #10k resistor in microMhos = 1000000
     fsr_conductance = 1000000/fsr_resistance
 
-    return fsr_voltage
+    if (fsr_voltage <= 1000):
+        return 0
+    else:
+        return fsr_voltage
 
 
 
