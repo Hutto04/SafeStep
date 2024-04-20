@@ -170,60 +170,52 @@ def init_app_routes(app):
         return jsonify(data), 200
 
 
-    """
-    @desc: This route is used to insert data into the data collection for a specific user
-    @route: /data
-    @method: POST
-    @access: Private - should only insert data for the user after authentication
-    @return: JSON object containing a message indicating the success or failure of the insertion
-    """
-    @app.route('/data', methods=['POST'])
-    @token_required  # this is a decorator that checks for a valid token before allowing access to the route
-    def insert_data(current_user):
-        data_collection = mongo.db.data
+"""
+@desc: This route is used to insert data into the data collection for a specific user
+@route: /data
+@method: POST
+@access: Private - should only insert data for the user after authentication
+@return: JSON object containing a message indicating the success or failure of the insertion
+"""
+@app.route('/data', methods=['POST'])
+@token_required  # this is a decorator that checks for a valid token before allowing access to the route
+def insert_data(current_user):
+    data_collection = mongo.db.data
+    user_id = current_user.get('_id')
 
-        user_id = current_user.get('_id')
+    # get the request JSON data
+    request_data = request.json
 
-        # print body for debugging
-        print(request.json)
+    # init data object with user ID and timestamp
+    data = {
+        "user_id": user_id,
+        "timestamp": datetime.utcnow() - timedelta(hours=4)  # adjusted for timezone, mongo stores in UTC by default
+    }
 
-        # Generate random pressure data - placeholder for now.
-        # TODO: Replace this with actual pressure data from the sensors - so needs to be sent from the phone as json
-        # Body currently has a unused JSON object for this
-        data = {
-            "pressure_data": {
-                "MTK-1": random.randint(0, 100),
-                "MTK-2": random.randint(0, 100),
-                "MTK-3": random.randint(0, 100),
-                "MTK-4": random.randint(0, 100),
-                "MTK-5": random.randint(0, 100),
-                "D1": random.randint(0, 100),
-                "Lateral": random.randint(0, 100),
-                "Calcaneus": random.randint(0, 100),
-            },
-            "temperature_data": {
-                "Temperature": random.randint(0, 100),
-            },
-            "timestamp": datetime.utcnow() - timedelta(hours=4),  # adjusted for timezone, mongo stores in UTC by default
-            # Need to include the user's ID
-            "user_id": user_id
-        }
+    # Check if pressure data is present in the request
+    if "pressure_data" in request_data:
+        data["pressure_data"] = request_data["pressure_data"]
 
-        # Check if any data is abnormal
-        # TODO: Modify this to check for abnormal pressure and temperature data and sets the 'abnormal' flag accordingly
-        if is_abnormal(data):
-            # Take action for abnormal data
-            # TODO: Notifications?
-            print("Abnormal pressure detected!")
-            data['abnormal'] = True  # Mark the data as abnormal
+    # Check if temperature data is present in the request
+    if "temperature_data" in request_data:
+        data["temperature_data"] = request_data["temperature_data"]
 
-        # Insert into the data collection
-        try:
-            data_collection.insert_one(data)
-            return jsonify({"message": "Data inserted successfully."}), 201
-        except Exception as e:
-            print(e)
-            return jsonify({"message": "An error occurred while inserting data into the database."})
+    # Check if any data is abnormal
+    # TODO: Modify this to check for abnormal pressure and temperature data and set the 'abnormal' flag accordingly
+    if is_abnormal(data):
+        # Take action for abnormal data
+        # TODO: Notifications?
+        print("Abnormal data detected!")
+        data['abnormal'] = True  # Mark the data as abnormal
+
+    # Insert into the data collection
+    try:
+        data_collection.insert_one(data)
+        return jsonify({"message": "Data inserted successfully."}), 201
+    except Exception as e:
+        print(e)
+        return jsonify({"message": "An error occurred while inserting data into the database."})
+
 
     """
     @desc: This route is used to get the user's profile information

@@ -5,15 +5,15 @@ def is_abnormal(data):
     abnormal = False
     # Checking pressure data
     for value in data['pressure_data'].values():
-        # If the pressure is above 90 (just random value), then it's abnormal
-        if value > 90:
+        # If the pressure is above x, then it's abnormal
+        if value > 5.90:
             abnormal = True
             break  # exit loop if abnormality is found because we know the rest of the data is abnormal, may change this?
 
     # Now check temperature data for abnormality
     for value in data['temperature_data'].values():
-        # If the temperature is above 90 (just random value), then it's abnormal
-        if value > 90:
+        # If the temperature is above x, then it's abnormal
+        if value > 27.20:
             abnormal = True
             break
 

@@ -23,15 +23,24 @@ import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 
+import com.example.myapplication.Helper;
+import com.example.myapplication.api.ApiService;
+
+import org.json.JSONObject;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 public class BluetoothService {
     private static BluetoothService instance;
+    private ApiService apiService;
     private ConnectionListener connectionListener;
-    private float latestTemperature;
-    private float latestPressures;
+    private float[] latestTemperatures;
+    private float[] latestPressures;
     private static final UUID UUID_ENV_SENSE_SERVICE = UUID.fromString("00001810-0000-1000-8000-00805f9b34fb");
     private static final UUID UUID_TEMP_CHAR = UUID.fromString("00002a6e-0000-1000-8000-00805f9b34fb");
     private static final UUID UUID_PRESSURE_CHAR = UUID.fromString("0000210f-0000-1000-8000-00805f9b34fb");
@@ -52,6 +61,7 @@ public class BluetoothService {
     private BluetoothService(Context context) {
         this.context = context;
         initializeBluetoothAdapter();
+        apiService = ApiService.getInstance();
     }
 
     // Singleton
@@ -158,6 +168,12 @@ public class BluetoothService {
                     ActivityCompat.requestPermissions((PairingActivity) context, new String[]{Manifest.permission.BLUETOOTH}, 1);
                     return;
                 }
+                gatt.requestMtu(50); // Request higher MTU for faster data transfer - default is 23 bytes
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+                    Log.w("Bluetooth", "onConnectionStateChange - Bluetooth connect permission not granted");
+                    ActivityCompat.requestPermissions((PairingActivity) context, new String[]{Manifest.permission.BLUETOOTH}, 1);
+                    return;
+                }
                 bluetoothGatt.discoverServices();
                 if (connectionListener != null) {
                     connectionListener.onDeviceConnected();
@@ -171,12 +187,26 @@ public class BluetoothService {
         }
 
         @Override
+        public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+            Log.d("Bluetooth", "MTU size changed to: " + mtu);
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+                    Log.w("Bluetooth", "onMtuChanged - Bluetooth connect permission not granted");
+                    ActivityCompat.requestPermissions((PairingActivity) context, new String[]{Manifest.permission.BLUETOOTH}, 1);
+                    return;
+                }
+                gatt.discoverServices();
+            }
+        }
+
+        @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.d("Bluetooth", "Services discovered: " + gatt.getServices());
                 // if environment service is found, enable notifications for temperature and pressure
                 BluetoothGattService envSenseService = gatt.getService(UUID_ENV_SENSE_SERVICE);
                 if (envSenseService != null) {
+                    Log.d("Bluetooth", "Environment service found");
                     enableCharacteristicNotification(gatt, envSenseService, UUID_TEMP_CHAR);
                     enableCharacteristicNotification(gatt, envSenseService, UUID_PRESSURE_CHAR);
                 }
@@ -187,24 +217,96 @@ public class BluetoothService {
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             UUID characteristicUUID = characteristic.getUuid();
             if (UUID_TEMP_CHAR.equals(characteristicUUID)) {
-                Integer tempValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, 0);
-                if (tempValue != null) {
-                    float temperature = tempValue / 100.0f;
-                    latestTemperature = temperature;
-                    Log.d("Bluetooth", "Temperature updated: " + temperature + "°C");
+                byte[] tempBytes = characteristic.getValue();
+                if (tempBytes != null) {
+                    int numFloats = tempBytes.length / 4;
+                    float[] temperatures = new float[numFloats];
+                    ByteBuffer.wrap(tempBytes).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer().get(temperatures);
+                    latestTemperatures = temperatures;
+                    updateTemperature(temperatures);
+                    Log.d("Bluetooth", "Temperatures updated: " + Arrays.toString(temperatures) + "°C");
+                } else {
+                    Log.d("Bluetooth", "Temperature byte array is null");
                 }
             } else if (UUID_PRESSURE_CHAR.equals(characteristicUUID)) {
-                Integer pressureValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT32, 0);
-                if (pressureValue != null) {
-                    float pressure = pressureValue / 1000.0f;  // Convert from Pascals to kilopascals (kPa)?
-                    latestPressures = pressure;
-                    Log.d("Bluetooth", "Pressure updated: " + pressure + " kPa");
+                byte[] pressureBytes = characteristic.getValue();
+                if (pressureBytes != null) {
+                    int numFloats = pressureBytes.length / 4;
+                    float[] pressures = new float[numFloats];
+                    ByteBuffer.wrap(pressureBytes).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer().get(pressures);
+                    latestPressures = pressures;
+                    updatePressure(pressures);
+                    Log.d("Bluetooth", "Pressures updated: " + Arrays.toString(pressures) + " kPa");
                 } else {
-                    Log.w("Bluetooth", "Failed to read pressure value.");
+                    Log.w("Bluetooth", "Pressure byte array is null");
                 }
             }
         }
     };
+
+    private void updatePressure(float[] pressures) {
+        String token = Helper.getToken(context);
+        JSONObject jsonObject = new JSONObject();
+
+        try {
+            jsonObject.put("MTK-1", pressures[0]);
+            jsonObject.put("MTK-2", pressures[1]);
+            jsonObject.put("MTK-3", pressures[2]);
+            jsonObject.put("MTK-4", pressures[3]);
+            jsonObject.put("MTK-5", pressures[4]);
+            jsonObject.put("D1", pressures[5]);
+            jsonObject.put("Lateral", pressures[6]);
+            jsonObject.put("Calcaneus", pressures[7]);
+        } catch (Exception e) {
+            Log.e("BluetoothService", "Failed to create JSON object for Pressure data: " + e.getMessage());
+            return;
+        }
+
+        // update the user's data in the database
+        apiService.postData(token, jsonObject, new ApiService.ApiCallback() {
+            @Override
+            public void onSuccess(String response) {
+                Log.d("BluetoothService", "Pressure data updated successfully: " + response);
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.d("BluetoothService", "Failed to update Pressure data: " + errorMessage);
+            }
+        });
+    }
+
+    private void updateTemperature(float[] temperatures) {
+        String token = Helper.getToken(context);
+        JSONObject jsonObject = new JSONObject();
+
+        try {
+            jsonObject.put("MTK-1", temperatures[0]);
+            jsonObject.put("MTK-2", temperatures[1]);
+            jsonObject.put("MTK-3", temperatures[2]);
+            jsonObject.put("MTK-4", temperatures[3]);
+            jsonObject.put("MTK-5", temperatures[4]);
+            jsonObject.put("D1", temperatures[5]);
+            jsonObject.put("Lateral", temperatures[6]);
+            jsonObject.put("Calcaneus", temperatures[7]);
+        } catch (Exception e) {
+            Log.e("BluetoothService", "Failed to create JSON object for Temperature data: " + e.getMessage());
+            return;
+        }
+
+        // update the user's data in the database
+        apiService.postData(token, jsonObject, new ApiService.ApiCallback() {
+            @Override
+            public void onSuccess(String response) {
+                Log.d("BluetoothService", "Temperature data updated successfully: " + response);
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.d("BluetoothService", "Failed to update Temperature data: " + errorMessage);
+            }
+        });
+    }
 
     private void enableCharacteristicNotification(BluetoothGatt gatt, BluetoothGattService service, UUID characteristicUUID) {
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicUUID);
@@ -222,6 +324,7 @@ public class BluetoothService {
                 ActivityCompat.requestPermissions((PairingActivity) context, new String[]{Manifest.permission.BLUETOOTH}, 1);
                 return;
             }
+            Log.d("Bluetooth", "Enabling notifications for characteristic: " + characteristicUUID);
             gatt.writeDescriptor(descriptor);
         }
     }
@@ -276,11 +379,11 @@ public class BluetoothService {
         this.onDeviceFoundListener = listener;
     }
 
-    public float getLatestTemperature() {
-        return latestTemperature;
+    public float[] getLatestTemperature() {
+        return latestTemperatures;
     }
 
-    public float getLatestPressure() {
+    public float[] getLatestPressures() {
         return latestPressures;
     }
 }
