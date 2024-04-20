@@ -15,7 +15,7 @@ def is_abnormal(data):
     if temperature_data:
         for value in temperature_data.values():
         # If the temperature is above x, then it's abnormal
-            if value > 27.20:
+            if value > 27.80:
                 return True
     return False
 

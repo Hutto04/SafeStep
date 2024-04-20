@@ -37,16 +37,18 @@ import java.util.UUID;
 
 public class BluetoothService {
     private static BluetoothService instance;
-    private ApiService apiService;
+    private final ApiService apiService;
     private ConnectionListener connectionListener;
     private float[] latestTemperatures;
     private float[] latestPressures;
+    private boolean temperatureUpdated = false;
+    private boolean pressureUpdated = false;
     private static final UUID UUID_ENV_SENSE_SERVICE = UUID.fromString("00001810-0000-1000-8000-00805f9b34fb");
     private static final UUID UUID_TEMP_CHAR = UUID.fromString("00002a6e-0000-1000-8000-00805f9b34fb");
     private static final UUID UUID_PRESSURE_CHAR = UUID.fromString("0000210f-0000-1000-8000-00805f9b34fb");
 
     private final Context context;
-    private BluetoothAdapter bluetoothAdapter;
+    private final BluetoothAdapter bluetoothAdapter;
     private BluetoothLeScanner bluetoothLeScanner;
     private BluetoothGatt bluetoothGatt;
     public boolean isScanning;
@@ -59,28 +61,25 @@ public class BluetoothService {
     }
 
     private BluetoothService(Context context) {
+        BluetoothManager bluetoothManager = (BluetoothManager) context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
+        this.bluetoothAdapter = bluetoothManager.getAdapter();
+        if (this.bluetoothAdapter == null) {
+            Log.e("BluetoothService", "Bluetooth not supported");
+        } else {
+            this.bluetoothLeScanner = this.bluetoothAdapter.getBluetoothLeScanner();
+        }
         this.context = context;
-        initializeBluetoothAdapter();
-        apiService = ApiService.getInstance();
+        this.apiService = ApiService.getInstance();
     }
 
     // Singleton
-    public static BluetoothService getInstance(Context context) {
+    public static synchronized BluetoothService getInstance(Context context) {
         if (instance == null) {
-            instance = new BluetoothService(context);
+            instance = new BluetoothService(context.getApplicationContext());
         }
         return instance;
     }
 
-    private void initializeBluetoothAdapter() {
-        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-        bluetoothAdapter = bluetoothManager.getAdapter();
-        if (bluetoothAdapter == null) {
-            Toast.makeText(context, "Bluetooth not supported", Toast.LENGTH_SHORT).show();
-        } else {
-            bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
-        }
-    }
 
     public BluetoothDevice getRemoteDevice(String address) {
         return bluetoothAdapter.getRemoteDevice(address);
@@ -103,6 +102,7 @@ public class BluetoothService {
                 .build();
         filters.add(filter);
 
+        // TODO: Maybe use settings & filters to scan for specific device later on
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .build();
@@ -223,7 +223,8 @@ public class BluetoothService {
                     float[] temperatures = new float[numFloats];
                     ByteBuffer.wrap(tempBytes).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer().get(temperatures);
                     latestTemperatures = temperatures;
-                    updateTemperature(temperatures);
+                    //updateTemperature(temperatures);
+                    temperatureUpdated = true;
                     Log.d("Bluetooth", "Temperatures updated: " + Arrays.toString(temperatures) + "°C");
                 } else {
                     Log.d("Bluetooth", "Temperature byte array is null");
@@ -235,51 +236,24 @@ public class BluetoothService {
                     float[] pressures = new float[numFloats];
                     ByteBuffer.wrap(pressureBytes).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer().get(pressures);
                     latestPressures = pressures;
-                    updatePressure(pressures);
+                    //updatePressure(pressures);
+                    pressureUpdated = true;
                     Log.d("Bluetooth", "Pressures updated: " + Arrays.toString(pressures) + " kPa");
                 } else {
                     Log.w("Bluetooth", "Pressure byte array is null");
                 }
             }
+
+            // if both temperature and pressure are updated, update the sensor data
+            if (temperatureUpdated && pressureUpdated) {
+                updateSensorData(latestPressures, latestTemperatures);
+                temperatureUpdated = false;
+                pressureUpdated = false;
+            }
         }
     };
 
-    private void updatePressure(float[] pressures) {
-        String token = Helper.getToken(context);
-        JSONObject jsonObject = new JSONObject();
-
-        try {
-            JSONObject pressureData = new JSONObject();
-            pressureData.put("MTK-1", pressures[0]);
-            pressureData.put("MTK-2", pressures[1]);
-            pressureData.put("MTK-3", pressures[2]);
-            pressureData.put("MTK-4", pressures[3]);
-            pressureData.put("MTK-5", pressures[4]);
-            pressureData.put("D1", pressures[5]);
-            pressureData.put("Lateral", pressures[6]);
-            pressureData.put("Calcaneus", pressures[7]);
-
-            jsonObject.put("pressure_data", pressureData);
-        } catch (Exception e) {
-            Log.e("BluetoothService", "Failed to create JSON object for Pressure data: " + e.getMessage());
-            return;
-        }
-
-        // update the user's data in the database
-        apiService.postData(token, jsonObject, new ApiService.ApiCallback() {
-            @Override
-            public void onSuccess(String response) {
-                Log.d("BluetoothService", "Pressure data updated successfully: " + response);
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                Log.d("BluetoothService", "Failed to update Pressure data: " + errorMessage);
-            }
-        });
-    }
-
-    private void updateTemperature(float[] temperatures) {
+    private void updateSensorData(float[] pressures, float[] temperatures) {
         String token = Helper.getToken(context);
         JSONObject jsonObject = new JSONObject();
 
@@ -294,9 +268,25 @@ public class BluetoothService {
             temperatureData.put("Lateral", temperatures[6]);
             temperatureData.put("Calcaneus", temperatures[7]);
 
-            jsonObject.put("temperature_data", temperatureData);
+            JSONObject pressureData = new JSONObject();
+            pressureData.put("MTK-1", pressures[0]);
+            pressureData.put("MTK-2", pressures[1]);
+            pressureData.put("MTK-3", pressures[2]);
+            pressureData.put("MTK-4", pressures[3]);
+            pressureData.put("MTK-5", pressures[4]);
+            pressureData.put("D1", pressures[5]);
+            pressureData.put("Lateral", pressures[6]);
+            pressureData.put("Calcaneus", pressures[7]);
+
+            // Create a new JSONObject that will hold both the temperature and pressure data
+            JSONObject data = new JSONObject();
+            data.put("temperature_data", temperatureData);
+            data.put("pressure_data", pressureData);
+
+            // put the 'data' object into the main jsonObject
+            jsonObject.put("data", data);
         } catch (Exception e) {
-            Log.e("BluetoothService", "Failed to create JSON object for Temperature data: " + e.getMessage());
+            Log.e("BluetoothService", "Failed to create JSON object for sensor data: " + e.getMessage());
             return;
         }
 
@@ -304,15 +294,16 @@ public class BluetoothService {
         apiService.postData(token, jsonObject, new ApiService.ApiCallback() {
             @Override
             public void onSuccess(String response) {
-                Log.d("BluetoothService", "Temperature data updated successfully: " + response);
+                Log.d("BluetoothService", "Sensor data updated successfully: " + response);
             }
 
             @Override
             public void onFailure(String errorMessage) {
-                Log.d("BluetoothService", "Failed to update Temperature data: " + errorMessage);
+                Log.d("BluetoothService", "Failed to update sensor data: " + errorMessage);
             }
         });
     }
+
 
     private void enableCharacteristicNotification(BluetoothGatt gatt, BluetoothGattService service, UUID characteristicUUID) {
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicUUID);

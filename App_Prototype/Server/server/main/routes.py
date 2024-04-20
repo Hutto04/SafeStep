@@ -181,38 +181,22 @@ def init_app_routes(app):
     @token_required
     def insert_data(current_user):
         data_collection = mongo.db.data
-        user_id = current_user.get('_id')
-        request_data = request.json
+        request_data = request.json.get('data', {})  # Retrieve the nested 'data' object
 
-        # init data object with user ID and timestamp
         data = {
-            "user_id": user_id,
-            "timestamp": datetime.utcnow() - timedelta(hours=4)  # adjusted for timezone
+            "user_id": current_user.get('_id'),
+            "timestamp": datetime.utcnow() - timedelta(hours=4),  # adjusted for timezone, mongo stores in UTC by default
+            "pressure_data": request_data.get("pressure_data"),
+            "temperature_data": request_data.get("temperature_data"),
+            "abnormal": is_abnormal(request_data)  # check if the data is abnormal
         }
 
-        # validation
-        if 'pressure_data' not in request_data and 'temperature_data' not in request_data:
-            return jsonify({"message": "Missing required data components: 'pressure_data' and/or 'temperature_data'"}), 400
-
-        # include data only if present
-        if 'pressure_data' in request_data:
-            data['pressure_data'] = request_data['pressure_data']
-        if 'temperature_data' in request_data:
-            data['temperature_data'] = request_data['temperature_data']
-
-        # Check if any data is abnormal
-        # TODO: Notifications?
-        if is_abnormal(data):
-            print("Abnormal data detected!")
-            data['abnormal'] = True  # Mark the data as abnormal
-
-        # Insert into the data collection
         try:
             data_collection.insert_one(data)
             return jsonify({"message": "Data inserted successfully."}), 201
         except Exception as e:
-            print(e)
-            return jsonify({"message": "An error occurred while inserting data into the database."}), 500
+            print("Error inserting data:", e)
+            return jsonify({"message": "An error occurred while inserting data."}), 500
 
 
     """
