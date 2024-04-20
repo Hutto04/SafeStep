@@ -249,14 +249,17 @@ public class BluetoothService {
         JSONObject jsonObject = new JSONObject();
 
         try {
-            jsonObject.put("MTK-1", pressures[0]);
-            jsonObject.put("MTK-2", pressures[1]);
-            jsonObject.put("MTK-3", pressures[2]);
-            jsonObject.put("MTK-4", pressures[3]);
-            jsonObject.put("MTK-5", pressures[4]);
-            jsonObject.put("D1", pressures[5]);
-            jsonObject.put("Lateral", pressures[6]);
-            jsonObject.put("Calcaneus", pressures[7]);
+            JSONObject pressureData = new JSONObject();
+            pressureData.put("MTK-1", pressures[0]);
+            pressureData.put("MTK-2", pressures[1]);
+            pressureData.put("MTK-3", pressures[2]);
+            pressureData.put("MTK-4", pressures[3]);
+            pressureData.put("MTK-5", pressures[4]);
+            pressureData.put("D1", pressures[5]);
+            pressureData.put("Lateral", pressures[6]);
+            pressureData.put("Calcaneus", pressures[7]);
+
+            jsonObject.put("pressure_data", pressureData);
         } catch (Exception e) {
             Log.e("BluetoothService", "Failed to create JSON object for Pressure data: " + e.getMessage());
             return;
@@ -281,14 +284,17 @@ public class BluetoothService {
         JSONObject jsonObject = new JSONObject();
 
         try {
-            jsonObject.put("MTK-1", temperatures[0]);
-            jsonObject.put("MTK-2", temperatures[1]);
-            jsonObject.put("MTK-3", temperatures[2]);
-            jsonObject.put("MTK-4", temperatures[3]);
-            jsonObject.put("MTK-5", temperatures[4]);
-            jsonObject.put("D1", temperatures[5]);
-            jsonObject.put("Lateral", temperatures[6]);
-            jsonObject.put("Calcaneus", temperatures[7]);
+            JSONObject temperatureData = new JSONObject();
+            temperatureData.put("MTK-1", temperatures[0]);
+            temperatureData.put("MTK-2", temperatures[1]);
+            temperatureData.put("MTK-3", temperatures[2]);
+            temperatureData.put("MTK-4", temperatures[3]);
+            temperatureData.put("MTK-5", temperatures[4]);
+            temperatureData.put("D1", temperatures[5]);
+            temperatureData.put("Lateral", temperatures[6]);
+            temperatureData.put("Calcaneus", temperatures[7]);
+
+            jsonObject.put("pressure_data", temperatureData);
         } catch (Exception e) {
             Log.e("BluetoothService", "Failed to create JSON object for Temperature data: " + e.getMessage());
             return;
