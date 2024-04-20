@@ -170,51 +170,51 @@ def init_app_routes(app):
         return jsonify(data), 200
 
 
-"""
-@desc: This route is used to insert data into the data collection for a specific user
-@route: /data
-@method: POST
-@access: Private - should only insert data for the user after authentication
-@return: JSON object containing a message indicating the success or failure of the insertion
-"""
-@app.route('/data', methods=['POST'])
-@token_required  # this is a decorator that checks for a valid token before allowing access to the route
-def insert_data(current_user):
-    data_collection = mongo.db.data
-    user_id = current_user.get('_id')
+    """
+    @desc: This route is used to insert data into the data collection for a specific user
+    @route: /data
+    @method: POST
+    @access: Private - should only insert data for the user after authentication
+    @return: JSON object containing a message indicating the success or failure of the insertion
+    """
+    @app.route('/data', methods=['POST'])
+    @token_required  # this is a decorator that checks for a valid token before allowing access to the route
+    def insert_data(current_user):
+        data_collection = mongo.db.data
+        user_id = current_user.get('_id')
 
-    # get the request JSON data
-    request_data = request.json
+        # get the request JSON data
+        request_data = request.json
 
-    # init data object with user ID and timestamp
-    data = {
-        "user_id": user_id,
-        "timestamp": datetime.utcnow() - timedelta(hours=4)  # adjusted for timezone, mongo stores in UTC by default
-    }
+        # init data object with user ID and timestamp
+        data = {
+            "user_id": user_id,
+            "timestamp": datetime.utcnow() - timedelta(hours=4)  # adjusted for timezone, mongo stores in UTC by default
+        }
 
-    # Check if pressure data is present in the request
-    if "pressure_data" in request_data:
-        data["pressure_data"] = request_data["pressure_data"]
+        # Check if pressure data is present in the request
+        if "pressure_data" in request_data:
+            data["pressure_data"] = request_data["pressure_data"]
 
-    # Check if temperature data is present in the request
-    if "temperature_data" in request_data:
-        data["temperature_data"] = request_data["temperature_data"]
+        # Check if temperature data is present in the request
+        if "temperature_data" in request_data:
+            data["temperature_data"] = request_data["temperature_data"]
 
-    # Check if any data is abnormal
-    # TODO: Modify this to check for abnormal pressure and temperature data and set the 'abnormal' flag accordingly
-    if is_abnormal(data):
-        # Take action for abnormal data
-        # TODO: Notifications?
-        print("Abnormal data detected!")
-        data['abnormal'] = True  # Mark the data as abnormal
+        # Check if any data is abnormal
+        # TODO: Modify this to check for abnormal pressure and temperature data and set the 'abnormal' flag accordingly
+        if is_abnormal(data):
+            # Take action for abnormal data
+            # TODO: Notifications?
+            print("Abnormal data detected!")
+            data['abnormal'] = True  # Mark the data as abnormal
 
-    # Insert into the data collection
-    try:
-        data_collection.insert_one(data)
-        return jsonify({"message": "Data inserted successfully."}), 201
-    except Exception as e:
-        print(e)
-        return jsonify({"message": "An error occurred while inserting data into the database."})
+        # Insert into the data collection
+        try:
+            data_collection.insert_one(data)
+            return jsonify({"message": "Data inserted successfully."}), 201
+        except Exception as e:
+            print(e)
+            return jsonify({"message": "An error occurred while inserting data into the database."})
 
 
     """
