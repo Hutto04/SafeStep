@@ -294,7 +294,7 @@ public class BluetoothService {
             temperatureData.put("Lateral", temperatures[6]);
             temperatureData.put("Calcaneus", temperatures[7]);
 
-            jsonObject.put("pressure_data", temperatureData);
+            jsonObject.put("temperature_data", temperatureData);
         } catch (Exception e) {
             Log.e("BluetoothService", "Failed to create JSON object for Temperature data: " + e.getMessage());
             return;
