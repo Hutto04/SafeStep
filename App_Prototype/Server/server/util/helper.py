@@ -2,22 +2,20 @@ from bson import ObjectId
 
 # Abnormal detector
 def is_abnormal(data):
-    abnormal = False
     # Checking pressure data
-    for value in data['pressure_data'].values():
+    if 'pressure_data' in data:
+        for value in data['pressure_data'].values():
         # If the pressure is above x, then it's abnormal
-        if value > 5.90:
-            abnormal = True
-            break  # exit loop if abnormality is found because we know the rest of the data is abnormal, may change this?
+            if value > 5.90:
+                return True
 
     # Now check temperature data for abnormality
-    for value in data['temperature_data'].values():
+    if 'temperature_data' in data:
+        for value in data['temperature_data'].values():
         # If the temperature is above x, then it's abnormal
-        if value > 27.20:
-            abnormal = True
-            break
-
-    return abnormal
+            if value > 27.20:
+                return True
+    return False
 
 
 # Convert ObjectId to string for JSON serialization (MongoDB)
