@@ -16,7 +16,7 @@ It all started with a group of students from Columbus State University, much lik
 
 SafeStep is a **smart sock** that monitors the foot health of diabetic patients. It is designed to help prevent foot ulcers and amputations by providing real-time data on foot temperature and pressure.
 
-**_Maybe...insert image or video Here_**
+**_Video of setting up and using our project are in plan but not a priority. If a video would be helpful, please let us know and we'll get on it!_**
 
 ## How does it work?
 
@@ -29,11 +29,12 @@ SafeStep uses a combination of hardware and software to function. The hardware i
 - Android Studio
 - Flask
 - MongoDB
-
-**_Maybe...insert image or video Here_**
+- Raspberry Pi Pico W
 
 ## Continuous Innovation
 
 **SafeStep is a work in progress**. We are constantly working to improve the technology and make it more effective at detecting foot ulcers. We are also exploring new ways to use the data collected by the sock to help improve the overall health of diabetic patients.
 
 This project is a collaboration between students from Columbus State University and will be continued to be developed by either our team or future students.
+
+![Tech Stack](../static/img/Mariagram.png)

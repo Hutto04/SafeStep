@@ -109,7 +109,7 @@ If you manually set up the backend and database, you can skip this section, this
 
 :::info
 
-This is currently **incomplete**, need to add the files for the Docker setup.
+**Download the needed files from the [here](https://www.mediafire.com/file/acn35cz3yzsu5ec/SafeStep-Backend.zip/file)**
 
 :::
 

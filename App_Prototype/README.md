@@ -3,6 +3,9 @@
 
 This is a basic prototype for our project **SafeStep**. This mobile application will allow users to register, login, and see the current pressure/temperature reading of their smart socks. The app will be connected to the socks via Bluetooth (currently planning to use Pi Pico W, may change).
 
+## Documentation
+For our comprehensive documention: https://safestepcsu.github.io/SafeStep/
+
 
 ## Installation/SetUp 🛠️
 
@@ -26,7 +29,12 @@ This means your server is successfully up and running.
 
 ### App
 Now that our Flask Server is up and running, let's move on to setting up our Android App in Android Studio. Ensure your flask server is ready and Android Studio is set up correctly.
-- Just run it... (detailed write coming later, if needed)
+1. Navigate to `SafeStep/App_Prototype` and open `App` in Android Studios.
+2. Go to the Gradle scripts and open `build.gradle` (Module:app), look for `buildPython` under `defaultConfig` and change the path to **your path to your Python executable.
+3. Now build using Gradle, if successful, you should now be able to run.
+
+For a more detailed guide or troubleshooting help refer to our [documentation](https://safestepcsu.github.io/SafeStep/).
+
 
 ### Database (MongoDB)
 I plan to write this out later, but setting up MongoDB is not hard at all.
@@ -51,6 +59,10 @@ Don't know what a `.env` file is? Refer to [here](https://blog.devgenius.io/why-
 
 `SECRET_KEY`=LEAVE EMPTY OR JUST PUT WHATEVER KEY YOU WANT
 
+
+## Bluetooth Setup
+
+- Refer to our [documentation](https://safestepcsu.github.io/SafeStep/docs/tutorial-basics/bluetooth) for a comprehensive guide on setting up Bluetooth on your microcontroller.
 
 ## API Reference
 
@@ -78,6 +90,8 @@ Don't know what a `.env` file is? Refer to [here](https://blog.devgenius.io/why-
   POST /register
 ```
 
+To see more or get more info please refer to our [documentation](https://safestepcsu.github.io/SafeStep/docs/tutorial-basics/flask-backend).
+
 
 ## Current Features
 
@@ -87,6 +101,13 @@ Don't know what a `.env` file is? Refer to [here](https://blog.devgenius.io/why-
 - Route protection with PyJWT
 - DB communication from App to Flask Web Server and back
 - Preliminary "abnormality detection" feature on the Server
+- Profile Page
+- Profile Info Editting
+- Pairing screen
+- Bluetooth communication
+- Debugging screen
+- Heatmap & Bar graph
+- Bottom navgiation
 
 ## Tech Stack
 
@@ -94,9 +115,11 @@ Don't know what a `.env` file is? Refer to [here](https://blog.devgenius.io/why-
 
 **Server:** Flask (Python) for backend operations, MongoDB as the database
 
+**Hardware:** Pi Pico W w/ [Round Force-Sensitive Resistor (FSR)](https://www.adafruit.com/product/166), [Ultra Thin 10K Thermistor](https://www.adafruit.com/product/4890) & [Analog/Digital MUX Breakout for Arduino](https://www.amazon.com/Analog-Digital-MUX-Breakout-Arduino/dp/B0068QD86S)
+
 
 ## Acknowledgements
-Here is a list of most if not all the references I used while building out this inital prototype:
+Here is a list of some the references I used while building out this inital prototype:
 
 - https://flask.palletsprojects.com/en/3.0.x/installation/
 - https://hackernoon.com/building-an-android-app-on-a-flask-server
@@ -113,6 +136,8 @@ Here is a list of most if not all the references I used while building out this 
 - https://stackoverflow.com/questions/34191731/where-to-store-a-jwt-token#:~:text=If%20you%20are%20using%20REST,store%20in%20PrivateMode%20for%20security.&text=If%20you're%20writing%20an,need%20to%20make%20it%20work).
 - https://stackoverflow.com/questions/12906402/type-object-datetime-datetime-has-no-attribute-datetime
 - https://stackoverflow.com/questions/66449161/how-to-upgrade-an-android-project-to-java-11
+  
+Many more please refer to our [documentation's apppendices](https://safestepcsu.github.io/SafeStep/docs/tutorial-extras/appendices)
 
 ## TODO 📝
 
@@ -122,5 +147,7 @@ Here is a list of most if not all the references I used while building out this 
 - Incorporate a visibility toggle for passwords
 - Data Validation (validate data before inserting to db, anything else?)
 - Probably change font
-- Design a Home/Feed screen with data visualizations
+- Real-time data
+- Data conversion
+- Notifications
 - Probably more

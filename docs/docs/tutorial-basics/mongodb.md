@@ -1,23 +1,28 @@
 ---
-sidebar_position: 6
+sidebar_position: 5
 ---
 
 # MongoDB
 
-You have just learned the **basics of Docusaurus** and made some changes to the **initial template**.
+This covers how we used MongoDB in our project.
 
-Docusaurus has **much more to offer**!
+## Set up
 
-Have **5 more minutes**? Take a look at **[versioning](../tutorial-extras/manage-docs-versions.md)** and **[i18n](../tutorial-extras/translate-your-site.md)**.
+We will keep this real brief as setting up MongoDB is a straightforward process.
 
-Anything **unclear** or **buggy** in this tutorial? [Please report it!](https://github.com/facebook/docusaurus/discussions/4610)
+Just go to their [official website](https://www.mongodb.com/) make an account and follow their instruction to make a cluster and then an URI connection string.
 
-## What's next?
+## Collections
 
-- Read the [official documentation](https://docusaurus.io/)
-- Modify your site configuration with [`docusaurus.config.js`](https://docusaurus.io/docs/api/docusaurus-config)
-- Add navbar and footer items with [`themeConfig`](https://docusaurus.io/docs/api/themes/configuration)
-- Add a custom [Design and Layout](https://docusaurus.io/docs/styling-layout)
-- Add a [search bar](https://docusaurus.io/docs/search)
-- Find inspirations in the [Docusaurus showcase](https://docusaurus.io/showcase)
-- Get involved in the [Docusaurus Community](https://docusaurus.io/community/support)
+We have two collections in our database:
+  - `users`
+    - This collection stores all the user information.
+  - `data`
+    - This collection stores all the data from the Pico.
+      - Pressure readings
+      - Temperature readings
+    - Be sure to make this **time-series** data as we will be querying this data a lot.
+
+## Additional Information
+
+If you need any additional information or assistance, please submit an issue on our [GitHub repository](https://github.com/SafeStepCSU/SafeStep/issues).

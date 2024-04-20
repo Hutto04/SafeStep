@@ -247,7 +247,7 @@ def init_app_routes(app):
 
         # Build a dynamic update object
         update_data = {}
-        allowed_fields = ['name', 'name', 'dob', 'height', 'weight', 'doctor_name', 'doctor_email']
+        allowed_fields = ['name', 'email', 'dob', 'height', 'weight', 'doctor_name', 'doctor_email']
 
         # Iterate over allowed fields and add them to the update_data dictionary if they are in new_data
         for field in allowed_fields:
