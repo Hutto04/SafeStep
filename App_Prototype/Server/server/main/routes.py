@@ -178,33 +178,31 @@ def init_app_routes(app):
     @return: JSON object containing a message indicating the success or failure of the insertion
     """
     @app.route('/data', methods=['POST'])
-    @token_required  # this is a decorator that checks for a valid token before allowing access to the route
+    @token_required
     def insert_data(current_user):
         data_collection = mongo.db.data
         user_id = current_user.get('_id')
-
-        # get the request JSON data
         request_data = request.json
 
         # init data object with user ID and timestamp
         data = {
             "user_id": user_id,
-            "timestamp": datetime.utcnow() - timedelta(hours=4)  # adjusted for timezone, mongo stores in UTC by default
+            "timestamp": datetime.utcnow() - timedelta(hours=4)  # adjusted for timezone
         }
 
-        # Check if pressure data is present in the request
-        if "pressure_data" in request_data:
-            data["pressure_data"] = request_data["pressure_data"]
+        # validation
+        if 'pressure_data' not in request_data and 'temperature_data' not in request_data:
+            return jsonify({"message": "Missing required data components: 'pressure_data' and/or 'temperature_data'"}), 400
 
-        # Check if temperature data is present in the request
-        if "temperature_data" in request_data:
-            data["temperature_data"] = request_data["temperature_data"]
+        # include data only if present
+        if 'pressure_data' in request_data:
+            data['pressure_data'] = request_data['pressure_data']
+        if 'temperature_data' in request_data:
+            data['temperature_data'] = request_data['temperature_data']
 
         # Check if any data is abnormal
-        # TODO: Modify this to check for abnormal pressure and temperature data and set the 'abnormal' flag accordingly
+        # TODO: Notifications?
         if is_abnormal(data):
-            # Take action for abnormal data
-            # TODO: Notifications?
             print("Abnormal data detected!")
             data['abnormal'] = True  # Mark the data as abnormal
 
@@ -214,7 +212,7 @@ def init_app_routes(app):
             return jsonify({"message": "Data inserted successfully."}), 201
         except Exception as e:
             print(e)
-            return jsonify({"message": "An error occurred while inserting data into the database."})
+            return jsonify({"message": "An error occurred while inserting data into the database."}), 500
 
 
     """

@@ -3,15 +3,17 @@ from bson import ObjectId
 # Abnormal detector
 def is_abnormal(data):
     # Checking pressure data
-    if 'pressure_data' in data:
-        for value in data['pressure_data'].values():
+    pressure_data = data.get('pressure_data')
+    if pressure_data:
+        for value in pressure_data.values():
         # If the pressure is above x, then it's abnormal
             if value > 5.90:
                 return True
 
     # Now check temperature data for abnormality
-    if 'temperature_data' in data:
-        for value in data['temperature_data'].values():
+    temperature_data = data.get('temperature_data')
+    if temperature_data:
+        for value in temperature_data.values():
         # If the temperature is above x, then it's abnormal
             if value > 27.20:
                 return True
