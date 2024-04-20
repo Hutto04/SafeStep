@@ -29,7 +29,7 @@ This section will cover additional information that may be useful when working w
 - [Stack Overflow](https://stackoverflow.com/)
 - [Bottom Navigation Bar](https://www.youtube.com/watch?v=jOFLmKMOcK0)
 - [Docusaurus Documentation](https://docusaurus.io/docs/)
-- [Bluetooth documentation on Pico W](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf)
+- [Bluetooth documentation on Pico W](https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf)
 - [Using an FSR](https://learn.adafruit.com/force-sensitive-resistor-fsr/using-an-fsr)
 - [Using a Thermistor](https://learn.adafruit.com/thermistor/using-a-thermistor)
 - [OkHttp](https://square.github.io/okhttp/)
