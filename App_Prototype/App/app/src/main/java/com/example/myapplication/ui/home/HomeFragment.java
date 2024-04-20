@@ -38,7 +38,8 @@ import java.util.List;
  */
 public class HomeFragment extends Fragment {
     private ApiService apiService;
-    private BluetoothService bluetoothService;
+    private ImageView imageViewGraph;
+    private ImageView imageView2;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -62,12 +63,11 @@ public class HomeFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         apiService = ApiService.getInstance();
-        bluetoothService = BluetoothService.getInstance(requireContext());
 
         ToggleButton toggleButton = view.findViewById(R.id.toggleButton);
 
-        ImageView imageViewGraph = view.findViewById(R.id.imageViewGraph);
-        ImageView imageView2 = view.findViewById(R.id.imageView2);
+        imageViewGraph = view.findViewById(R.id.imageViewGraph);
+        imageView2 = view.findViewById(R.id.imageView2);
 
 
         // Start Python -
@@ -109,7 +109,7 @@ public class HomeFragment extends Fragment {
             @Override
             public void onSuccess(String response) {
                 Log.d("HomeFragment", "Response: " + response);
-                requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), response, Toast.LENGTH_SHORT).show());
+                //requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), response, Toast.LENGTH_SHORT).show());
 
                 try {
                     // Parse the JSON response
@@ -164,7 +164,6 @@ public class HomeFragment extends Fragment {
 
                     // TODO: Cache the bitmap to avoid regenerating it every time, only regenerate when new data is available or on a schedule (like every 30 minutes)
                     // Set the bitmap to the ImageView on the main thread
-                    ImageView imageViewGraph = getView().findViewById(R.id.imageViewGraph);
                     requireActivity().runOnUiThread(() -> imageViewGraph.setImageBitmap(bitmap));
                 } catch (Exception e) {
                     Log.e("HomeFragment", "Error parsing JSON", e);
@@ -185,7 +184,7 @@ public class HomeFragment extends Fragment {
             @Override
             public void onSuccess(String response) {
                 Log.d("HomeFragment", "Response: " + response);
-                requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), response, Toast.LENGTH_SHORT).show());
+                //requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), response, Toast.LENGTH_SHORT).show());
 
                 try {
                     // Parse the JSON response
@@ -237,57 +236,10 @@ public class HomeFragment extends Fragment {
 
                     // TODO: Cache the bitmap to avoid regenerating it every time, only regenerate when new data is available or on a schedule (like every 30 minutes)
                     // Set the bitmap to the ImageView on the main thread
-                    ImageView imageViewGraph = getView().findViewById(R.id.imageViewGraph);
                     requireActivity().runOnUiThread(() -> imageViewGraph.setImageBitmap(bitmap));
                 } catch (Exception e) {
                     Log.e("HomeFragment", "Error parsing JSON", e);
                 }
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                Log.d("HomeFragment", "Error: " + errorMessage);
-                requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show());
-            }
-        });
-    }
-
-    private void testProtectedGetRequest() {
-        String token = Helper.getToken(requireContext());
-        Log.d("HomeFragment", "Token: " + token);
-
-        apiService.getUserData(token, new ApiService.ApiCallback() {
-            @Override
-            public void onSuccess(String response) {
-                Log.d("HomeFragment", "Response: " + response);
-                requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), response, Toast.LENGTH_SHORT).show());
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                Log.d("HomeFragment", "Error: " + errorMessage);
-                requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show());
-            }
-        });
-    }
-
-    private void testProtectedPostRequest() {
-        String token = Helper.getToken(requireContext());
-        JSONObject jsonObject = new JSONObject();
-        // Add data to the JSON object
-        // TODO: Get data from sensors and add it to the JSON object
-        try {
-            jsonObject.put("sensor1", 75);
-            jsonObject.put("temperature", 25);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        apiService.postData(token, jsonObject, new ApiService.ApiCallback() {
-            @Override
-            public void onSuccess(String response) {
-                Log.d("HomeFragment", "Response: " + response);
-                requireActivity().runOnUiThread(() -> Toast.makeText(requireContext(), response, Toast.LENGTH_SHORT).show());
             }
 
             @Override

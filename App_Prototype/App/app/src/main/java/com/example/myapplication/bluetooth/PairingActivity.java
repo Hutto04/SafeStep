@@ -2,6 +2,7 @@ package com.example.myapplication.bluetooth;
 
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -20,6 +21,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.myapplication.MainActivity;
 import com.example.myapplication.R;
 
 import java.util.ArrayList;
@@ -39,6 +41,29 @@ public class PairingActivity extends AppCompatActivity implements BluetoothServi
         setContentView(R.layout.activity_pairing);
 
         bluetoothService = BluetoothService.getInstance(this);
+        // Set up the connection listener
+        bluetoothService.setConnectionListener(new ConnectionListener() {
+            @Override
+            public void onDeviceConnected() {
+                runOnUiThread(() -> {
+                    Toast.makeText(PairingActivity.this, "Device connected", Toast.LENGTH_SHORT).show();
+                    // redirect to the main activity - yay, they are connected
+                    Intent intent = new Intent(PairingActivity.this, MainActivity.class);
+                    startActivity(intent);
+                    finish(); // close, user should not be able to go back...
+                });
+            }
+
+            @Override
+            public void onDeviceDisconnected() {
+                runOnUiThread(() -> Toast.makeText(PairingActivity.this, "Device disconnected", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onConnectionFailure() {
+                runOnUiThread(() -> Toast.makeText(PairingActivity.this, "Connection failure", Toast.LENGTH_SHORT).show());
+            }
+        });
 
         pairingListView = findViewById(R.id.pairingListView);
         TextView textView5 = findViewById(R.id.textView5);
@@ -46,7 +71,8 @@ public class PairingActivity extends AppCompatActivity implements BluetoothServi
         Button rescanButton = findViewById(R.id.rescanButton);
         rescanButton.setOnClickListener(v -> {
             Log.d("PairingActivity", "Rescan button clicked");
-            // Rescan for devices
+            // Rescan for devices - currently doesn't really work lol
+            // TODO: figure this out i guess
                 Log.d("PairingActivity", "Rescanning for devices");
                 deviceList.clear();
                 checkPermissionsAndStartScanning();

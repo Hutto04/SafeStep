@@ -4,15 +4,27 @@ sidebar_position: 1
 
 # Installation
 
-A quick start guide to get you up and running with SafeStep.
+A quick start guide to our SafeStep project up and running on your local machine.
+
+:::note
+This is just a quick start guide to get the SafeStep project up and running on your local machine.
+
+**If you want a more comprehensive breakdown of a certain component for the project**, click on the pages in the sidebar to the left. (e.g. [Architecture](/docs/tutorial-basics/architecture), [Flask Server](/docs/tutorial-basics/flask-backend), etc.
+:::
 
 ## Prerequisites
 
-All requirements needed to run the project:
+#### Software Requirements:
+All software needed to run the SafeStep project is listed below:
 
 - `Android Studio` - for the mobile app
 - `Flask` - for the web server backend
 - `MongoDB` - for the database
+
+#### Hardware Requirements:
+- A computer (of course)
+- An Android device or emulator to run the mobile app
+- A Pi Pico W (which is what we used) or any other microcontroller to run the firmware that has Bluetooth capabilities
 
 ## Step-by-Step Guide
 
@@ -125,7 +137,7 @@ This is currently **incomplete**, need to add the files for the Docker setup.
    - Create a `.env` file in the project directory and add the following:
 
      ```bash
-     MONGO_URI=mongodb://mongo:27017/safestep
+     MONGO_URI=your_mongodb://mongo:27017/safestep
      SECRET_KEY=your_secret_key
      ```
 

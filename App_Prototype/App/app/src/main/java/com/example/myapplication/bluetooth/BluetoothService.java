@@ -376,7 +376,7 @@ public class BluetoothService {
         this.onDeviceFoundListener = listener;
     }
 
-    public float[] getLatestTemperature() {
+    public float[] getLatestTemperatures() {
         return latestTemperatures;
     }
 

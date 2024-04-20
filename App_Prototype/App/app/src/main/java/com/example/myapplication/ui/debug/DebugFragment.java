@@ -94,7 +94,7 @@ public class DebugFragment extends Fragment {
         Button getButton = view.findViewById(R.id.getButton);
         Button postButton = view.findViewById(R.id.postButton);
         Button pairedButton = view.findViewById(R.id.pairedButton);
-        Button scanButton = view.findViewById(R.id.bleScanButton);
+        Button dataButton = view.findViewById(R.id.bleScanButton);
 
         ToggleButton toggleButton = view.findViewById(R.id.toggleButton);
 
@@ -113,13 +113,14 @@ public class DebugFragment extends Fragment {
 
         pairedButton.setOnClickListener(v -> {
             Log.d("HomeFragment", "Paired Button clicked");
+            Log.d("Debug", "Connected Devices: " + bluetoothService.getConnectedDevices());
         });
 
-        scanButton.setOnClickListener(v -> {
-            float pressure = bluetoothService.getLatestPressure();
-            float temp = bluetoothService.getLatestTemperature();
-            Log.d("Debug", "Pressure: " + pressure);
-            Log.d("Debug", "Temperature: " + temp);
+        dataButton.setOnClickListener(v -> {
+            float[] pressures = bluetoothService.getLatestPressures();
+            float[] temps = bluetoothService.getLatestTemperatures();
+            Log.d("Debug", "Pressures: " + Arrays.toString(pressures));
+            Log.d("Debug", "Temperatures: " + Arrays.toString(temps));
         });
 
 

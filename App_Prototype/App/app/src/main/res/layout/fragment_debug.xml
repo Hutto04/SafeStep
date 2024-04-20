@@ -31,13 +31,13 @@
                 android:id="@+id/bleScanButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Scan" />
+                android:text="Get latest sensor data" />
 
             <Button
                 android:id="@+id/pairedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Paired Devices" />
+                android:text="Connected Devices" />
 
             <ToggleButton
                 android:id="@+id/toggleButton"

@@ -24,6 +24,7 @@ import com.example.myapplication.databinding.ActivityMainBinding;
 import com.example.myapplication.ui.SettingsFragment;
 import com.example.myapplication.ui.debug.DebugFragment;
 import com.example.myapplication.ui.home.HomeFragment;
+import com.example.myapplication.ui.notification.NotificationFragment;
 import com.example.myapplication.ui.profile.ProfileFragment;
 
 import java.util.List;
@@ -147,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
             if (item.getItemId() == R.id.home) {
                 replaceFragment(new HomeFragment());
             } else if (item.getItemId() == R.id.settings) {
-                replaceFragment(new SettingsFragment());
+                replaceFragment(new NotificationFragment());
             } else if (item.getItemId() == R.id.profile) {
                 replaceFragment(new ProfileFragment());
             } else if (item.getItemId() == R.id.debug) {
