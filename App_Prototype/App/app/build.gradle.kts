@@ -52,7 +52,7 @@ android {
 
         defaultConfig {
             version = "3.10"
-            buildPython("C:/Users/cxwin/AppData/Local/Programs/Python/Python310/python.exe")
+            buildPython("C:/Users/Purpreet Singh/AppData/Local/Programs/Python/Python312/python.exe")
 
             pip {
                 // A requirement specifier, with or without a version number:
@@ -79,5 +79,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    implementation("com.sun.mail:android-mail:1.6.3")
+    implementation("com.sun.mail:android-activation:1.6.3")
 }
 
