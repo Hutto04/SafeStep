@@ -17,6 +17,22 @@ import com.example.myapplication.R;
 
 import java.util.Properties;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.util.Properties;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -53,9 +69,43 @@ public class NotificationFragment extends Fragment {
         _txtMessage = view.findViewById(R.id.txtMessage);
         _btnSend = view.findViewById(R.id.txtSend);
 
-        _btnSend.setOnClickListener(v -> {
-            Log.w("NotificationStart", "Notification Start");
+        _btnSend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.w("NotificationStart","Starting App..");
+                final String username="spiderknight22@gmail.com"; // need to put gmail email inside
+                final String password="szgx muhb zpqi fkfo"; // need to put app password for gmail
+                String messageToSend=_txtMessage.getText().toString();
+                Properties props = new Properties();
+                props.put("mail.smtp.host", "smtp.gmail.com");
+                props.put("mail.smtp.port", "465");
+                props.put("mail.smtp.auth", "true");
+                props.put("mail.smtp.socketFactory.port", "465");
+                props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 
+                Session session = Session.getInstance(props, new javax.mail.Authenticator(){
+                    protected PasswordAuthentication getPasswordAuthentication(){
+                        return new PasswordAuthentication(username, password);
+                    }
+                });
+                Log.w("NotificationPass","Pass Created");
+                try{
+                    session.setDebug(true);
+                    Log.w("NotificationPass","In Try..");
+                    Message message = new MimeMessage(session);
+                    message.setFrom(new InternetAddress(username));
+                    String mail = _txtEmail.getText().toString();
+                    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(_txtEmail.getText().toString()));
+                    message.setSubject("Safe-Step-Notification");
+                    message.setText(messageToSend);
+                    Transport.send(message);
+                    Toast.makeText(getContext(), "email sent successfully", Toast.LENGTH_LONG).show();
+                }catch(MessagingException e){
+                    Log.w("NotificationCatch","In catch");
+                    throw new RuntimeException(e);
+
+                }
+            }
         });
         //StrictMode.ThreadPolicy policy = new StrictMode.Builder().permitAll().build();
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();

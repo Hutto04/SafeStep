@@ -42,14 +42,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         binding.bottomNavigationView.setVisibility(View.GONE);
         //replaceFragment(new HomeFragment()); // Start with the Home Fragment - default
-
+        showHomeFragment(); // Gurpreet: added showHomeFragment(); to go to homefrag
         bluetoothService = BluetoothService.getInstance(this);
 
         // Initialize Python - to call Python functions within Java
         if (!Python.isStarted()) {
             Python.start(new AndroidPlatform(this));
         }
-        checkBluetoothAndSetupUI();
+        //checkBluetoothAndSetupUI(); //commented out to avoid bluetooth_connect permissions
     }
 
     private void checkBluetoothAndSetupUI() {
