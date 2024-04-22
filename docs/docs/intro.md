@@ -8,7 +8,7 @@ A quick overview of SafeStep-- **SmartSocks for Diabetic Foot Monitoring**.
 
 ## The Beginning
 
-![The Beginning](../static/img/delaware.png)
+![The Beginning](../static/img/SafeStep_Final.png)
 
 It all started with a group of students from Columbus State University, much like the iconic depiction of **George Washington bravely crossing the Delaware**. Just as that pivotal moment was a turning point in history, our project represents a stride towards innovation in healthcare technology. As we navigate through the complexities of developing the SmartSock for diabetic foot monitoring, our journey echoes the daring and determination of those historical figures— with a bit less freezing river water and a lot more programming."
 
