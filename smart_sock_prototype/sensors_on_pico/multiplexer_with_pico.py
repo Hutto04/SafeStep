@@ -35,11 +35,11 @@ def loop():
         fsr_reading = read_mux(i)
         if (i<8):
             # for pressure reading 
-            fsr_reading = raw_pressure_to_newtons(fsr_reading)
+            #fsr_reading = raw_pressure_to_newtons(fsr_reading)
             print("sensor ", i, " : ", fsr_reading)
         else:
             # for temp reading 
-            fsr_reading = raw_temp_to_f(fsr_reading)
+            #fsr_reading = raw_temp_to_f(fsr_reading)
             print("sensor ", i, " : ", fsr_reading)
 
     time.sleep(.5)
@@ -119,7 +119,7 @@ def raw_temp_to_f(raw_temp):
 
 
     steinhart = 0.0
-    steinhart = avg / 18000
+    steinhart = avg / 19000
     steinhart = math.log(steinhart)
     steinhart /= 3950
     steinhart += 1.0 / (25 + 273.15)
