@@ -1,12 +1,10 @@
+# Helpers for generating BLE advertising payloads.
+
 from micropython import const
 import struct
 import bluetooth
 
-# Advertising payloads are repeated packets of the following form:
-#   1 byte data length (N + 1)
-#   1 byte type (see constants below)
-#   N bytes type-specific data
-
+# Advertising payload types
 _ADV_TYPE_FLAGS = const(0x01)
 _ADV_TYPE_NAME = const(0x09)
 _ADV_TYPE_UUID16_COMPLETE = const(0x3)
@@ -17,8 +15,10 @@ _ADV_TYPE_UUID32_MORE = const(0x4)
 _ADV_TYPE_UUID128_MORE = const(0x6)
 _ADV_TYPE_APPEARANCE = const(0x19)
 
-# Generate a payload to be passed to gap_advertise(adv_data=...).
 def advertising_payload(name=None, services=None, appearance=0, manufacturer_data=None):
+    """
+    Generate a payload to be passed to gap_advertise(adv_data=...).
+    """
     payload = bytearray()
 
     def _append(adv_type, value):
@@ -26,8 +26,7 @@ def advertising_payload(name=None, services=None, appearance=0, manufacturer_dat
         payload += struct.pack("BB", len(value) + 1, adv_type) + value
 
     if manufacturer_data:
-        # Prepend the manufacturer data with its AD type, which is 0xFF for Manufacturer Specific Data
-        _append(0xFF, manufacturer_data)
+        _append(0xFF, manufacturer_data)  # AD type for Manufacturer Specific Data
 
     if services:
         for uuid in services:
@@ -47,24 +46,29 @@ def advertising_payload(name=None, services=None, appearance=0, manufacturer_dat
 
     return payload
 
-
-
 def decode_field(payload, adv_type):
+    """
+    Decode fields from the payload.
+    """
     i = 0
     result = []
     while i + 1 < len(payload):
         if payload[i + 1] == adv_type:
-            result.append(payload[i + 2 : i + payload[i] + 1])
+            result.append(payload[i + 2: i + payload[i] + 1])
         i += 1 + payload[i]
     return result
 
-
 def decode_name(payload):
+    """
+    Decode name from the payload.
+    """
     n = decode_field(payload, _ADV_TYPE_NAME)
     return str(n[0], "utf-8") if n else ""
 
-
 def decode_services(payload):
+    """
+    Decode services from the payload.
+    """
     services = []
     for u in decode_field(payload, _ADV_TYPE_UUID16_COMPLETE):
         services.append(bluetooth.UUID(struct.unpack("<h", u)[0]))
@@ -74,16 +78,17 @@ def decode_services(payload):
         services.append(bluetooth.UUID(u))
     return services
 
-
 def demo():
+    """
+    Demo function to test advertising payload.
+    """
     payload = advertising_payload(
-        name="micropython",
-        #services=[bluetooth.UUID(0x181A), bluetooth.UUID("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")],
+        name="Pico",
+        # services=[bluetooth.UUID(0x181A), bluetooth.UUID("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")],
     )
     print(payload)
     print(decode_name(payload))
     print(decode_services(payload))
-
 
 if __name__ == "__main__":
     demo()
