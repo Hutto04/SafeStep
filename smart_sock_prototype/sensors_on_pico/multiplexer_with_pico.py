@@ -100,6 +100,8 @@ def raw_pressure_to_newtons(raw_pressure):
 
 
 def raw_temp_to_f(raw_temp):
+    # instead of raw temp decreasing we increase when temp increases 
+
     samples = []
     num_of_samples = 8
     # add values to array to get avg
@@ -114,21 +116,22 @@ def raw_temp_to_f(raw_temp):
     # convering the value to resistance 
     avg = (1023)/( avg - 1) 
     avg = 10000 / avg
-    print(avg)
 
 
     steinhart = 0.0
-    steinhart = avg / 10000
+    steinhart = avg / 18000
     steinhart = math.log(steinhart)
     steinhart /= 3950
     steinhart += 1.0 / (25 + 273.15)
     steinhart = 1.0 / steinhart
-    steinhart -= 273.15
+    #steinhart -= 273.15
+    steinhart = ((273.15 - steinhart) * -1)
 
     #converting c to f
-    f = (abs(steinhart) * 1.8) + 32
+    f =( (abs(steinhart) * 1.8) + 32)
 
-    return f 
+
+    return f
 
 
 

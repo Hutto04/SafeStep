@@ -6,6 +6,7 @@ from machine import Pin, ADC
 import ubinascii
 from ble_advertising import advertising_payload
 from micropython import const
+import math
 
 # Constants
 _IRQ_CENTRAL_CONNECT = const(1)
@@ -20,6 +21,14 @@ s1 = Pin(1, Pin.OUT)
 s2 = Pin(2, Pin.OUT)
 s3 = Pin(3, Pin.OUT)
 SIG_pin = ADC(0)
+
+def map(val, loval, hival, tolow, tohigh):
+    if loval <= val <= hival:
+        return (val - loval)/(hival-loval)*(tohigh-tolow) + tolow
+    else:
+        raise(ValueError)
+
+
 
 def read_mux(channel):
     control_pin = [s0, s1, s2, s3]
@@ -62,12 +71,65 @@ class BLESensor:
             pressure_reading = read_mux(i + 8)
             
             # Example conversion...
-            converted_temp = round(((temp_reading * 3.3 / 65535) * 100) , 2)  # Example
-            converted_pressure = round((pressure_reading * 3.3 / 65535 * 1000) - 3000, 2)  # Example conversion
+            # temp 
+            #converted_temp = round(((temp_reading * 3.3 / 65535) * 100) , 2)  # Example
+
+            samples = []
+            num_of_samples = 8
+            # add values to array to get avg
+            for i in range(num_of_samples):
+                samples.append(temp_reading)
+                time.sleep(0.01)
+
+            # avg the samples
+            avg = sum(samples)/ num_of_samples
             
-            if (converted_pressure <= 0):
+            # make sure you import math
+            # convering the value to resistance 
+            avg = (1023)/( avg - 1) 
+            avg = 10000 / avg
+
+
+            steinhart = 0.0
+            steinhart = avg / 18000
+            steinhart = math.log(steinhart)
+            steinhart /= 3950
+            steinhart += 1.0 / (25 + 273.15)
+            steinhart = 1.0 / steinhart
+            #steinhart -= 273.15
+            steinhart = ((273.15 - steinhart) * -1)
+
+            #converting c to f
+            converted_temp =( (abs(steinhart) * 1.8) + 32)
+
+
+        
+
+
+
+
+
+            # pressure 
+            #converted_pressure = round((pressure_reading * 3.3 / 65535 * 1000) - 3000, 2)  # Example conversion
+
+            # voltage is 3.3v or 3300mV
+            fsr_voltage = map(pressure_reading, 0, 65535, 0 , 3300)
+
+            # The voltage = Vcc * R / (R + FSR) where R = 10K and Vcc = 5V
+            # so FSR = ((Vcc - V) * R) / V
+
+            fsr_resistance = (3300 - fsr_voltage)
+
+            #10k resistor in microMhos = 1000000
+            fsr_conductance = 1000000/fsr_resistance
+
+            if (fsr_voltage <= 1000):
                 converted_pressure = 0
-            
+            else:
+                converted_pressure = fsr_voltage
+
+
+           
             temps.append(converted_temp)
             pressures.append(converted_pressure)
             
