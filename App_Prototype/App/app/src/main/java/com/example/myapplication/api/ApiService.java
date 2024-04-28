@@ -73,12 +73,12 @@ public class ApiService {
      * @param callback The callback to be called when the request is completed
      */
     public void postData(String token, JSONObject jsonObject, ApiCallback callback) {
-        MediaType JSON = MediaType.parse("application/json; charset=utf-8"); // Set JSON media type
+        MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
-        RequestBody body = RequestBody.create(jsonObject.toString(), JSON); // Create request body
+        RequestBody body = RequestBody.create(jsonObject.toString(), JSON);
         Request request = new Request.Builder()
                 .url(Helper.URL + "/data")
-                .addHeader("Authorization", "Bearer " + token) // authorization header
+                .addHeader("Authorization", "Bearer " + token)
                 .post(body)
                 .build();
 
@@ -99,7 +99,7 @@ public class ApiService {
                         callback.onFailure("Request failed with code: " + response.code());
                     }
                 } finally {
-                    response.close(); // Make sure to close the response to avoid leaks
+                    response.close();
                 }
             }
         });
@@ -147,12 +147,12 @@ public class ApiService {
      * @param callback The callback to be called when the request is completed
      */
     public void updateProfileInformation(String token, JSONObject jsonObject, ApiCallback callback) {
-        MediaType JSON = MediaType.parse("application/json; charset=utf-8"); // Set JSON media type
+        MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
-        RequestBody body = RequestBody.create(jsonObject.toString(), JSON); // Create request body
+        RequestBody body = RequestBody.create(jsonObject.toString(), JSON);
         Request request = new Request.Builder()
                 .url(Helper.URL + "/profile")
-                .addHeader("Authorization", "Bearer " + token) // authorization header
+                .addHeader("Authorization", "Bearer " + token)
                 .put(body)
                 .build();
 

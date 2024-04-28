@@ -41,16 +41,15 @@ public class PairingActivity extends AppCompatActivity implements BluetoothServi
         setContentView(R.layout.activity_pairing);
 
         bluetoothService = BluetoothService.getInstance(this);
-        // Set up the connection listener
         bluetoothService.setConnectionListener(new ConnectionListener() {
+
             @Override
             public void onDeviceConnected() {
                 runOnUiThread(() -> {
                     Toast.makeText(PairingActivity.this, "Device connected", Toast.LENGTH_SHORT).show();
-                    // redirect to the main activity - yay, they are connected
                     Intent intent = new Intent(PairingActivity.this, MainActivity.class);
                     startActivity(intent);
-                    finish(); // close, user should not be able to go back...
+                    finish();
                 });
             }
 
@@ -71,8 +70,6 @@ public class PairingActivity extends AppCompatActivity implements BluetoothServi
         Button rescanButton = findViewById(R.id.rescanButton);
         rescanButton.setOnClickListener(v -> {
             Log.d("PairingActivity", "Rescan button clicked");
-            // Rescan for devices - currently doesn't really work lol
-            // TODO: figure this out i guess
                 Log.d("PairingActivity", "Rescanning for devices");
                 deviceList.clear();
                 checkPermissionsAndStartScanning();
@@ -90,7 +87,6 @@ public class PairingActivity extends AppCompatActivity implements BluetoothServi
             return insets;
         });
 
-        // handles the click event on the list view for pairing (well really 'connecting')
         pairingListView.setOnItemClickListener((parent, view, position, id) -> {
             Log.d("PairingActivity", "Item clicked: " + position);
             String deviceInfo = (String) parent.getItemAtPosition(position);
@@ -116,11 +112,9 @@ public class PairingActivity extends AppCompatActivity implements BluetoothServi
     private void checkPermissionsAndStartScanning() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            // Request permission
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_CODE);
         } else {
-            // Permission already granted, start scanning
             bluetoothService.startScanning();
         }
     }
@@ -130,10 +124,8 @@ public class PairingActivity extends AppCompatActivity implements BluetoothServi
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, start scanning
                 bluetoothService.startScanning();
             } else {
-                // Permission denied
                 Toast.makeText(this, "Location permission is required for scanning BLE devices", Toast.LENGTH_SHORT).show();
             }
         }

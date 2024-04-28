@@ -70,7 +70,6 @@ public class UserInfoFragment extends Fragment implements Saveable {
     @Override
     public void saveData() {
         Log.d("UserInfoFragment", "saveData: Saving user info");
-        // update shared preferences
         sharedPreferences.edit()
                 .putString("name", userName.getText().toString())
                 .putString("email", userEmail.getText().toString())
@@ -95,7 +94,6 @@ public class UserInfoFragment extends Fragment implements Saveable {
             e.printStackTrace();
         }
 
-        // debug
         Log.d("UserInfoFragment", "Sending: " + jsonObject);
 
         apiService.updateProfileInformation(token, jsonObject, new ApiService.ApiCallback() {

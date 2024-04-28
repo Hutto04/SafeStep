@@ -72,7 +72,6 @@ public class BluetoothService {
         this.apiService = ApiService.getInstance();
     }
 
-    // Singleton
     public static synchronized BluetoothService getInstance(Context context) {
         if (instance == null) {
             instance = new BluetoothService(context.getApplicationContext());
@@ -98,20 +97,18 @@ public class BluetoothService {
         List<ScanFilter> filters = new ArrayList<>();
         ScanFilter filter = new ScanFilter.Builder()
                 .setServiceUuid(new ParcelUuid(UUID.fromString("00001810-0000-1000-8000-00805f9b34fb")))
-                .setDeviceName("Pico") // Replace with your device name
+                .setDeviceName("Pico")
                 .build();
         filters.add(filter);
 
-        // TODO: Maybe use settings & filters to scan for specific device later on
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .build();
-
         //bluetoothLeScanner.startScan(filters, settings, scanCallback);
+
         Log.d("BluetoothService", "BLE scanning started");
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
             Log.w("BluetoothService", "Bluetooth scan permission not granted");
-            // ask for permission
             ActivityCompat.requestPermissions((PairingActivity) context, new String[]{Manifest.permission.BLUETOOTH}, 1);
             return;
         }
@@ -203,7 +200,6 @@ public class BluetoothService {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.d("Bluetooth", "Services discovered: " + gatt.getServices());
-                // if environment service is found, enable notifications for temperature and pressure
                 BluetoothGattService envSenseService = gatt.getService(UUID_ENV_SENSE_SERVICE);
                 if (envSenseService != null) {
                     Log.d("Bluetooth", "Environment service found");
@@ -223,7 +219,6 @@ public class BluetoothService {
                     float[] temperatures = new float[numFloats];
                     ByteBuffer.wrap(tempBytes).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer().get(temperatures);
                     latestTemperatures = temperatures;
-                    //updateTemperature(temperatures);
                     temperatureUpdated = true;
                     Log.d("Bluetooth", "Temperatures updated: " + Arrays.toString(temperatures) + "°C");
                 } else {
@@ -236,7 +231,6 @@ public class BluetoothService {
                     float[] pressures = new float[numFloats];
                     ByteBuffer.wrap(pressureBytes).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer().get(pressures);
                     latestPressures = pressures;
-                    //updatePressure(pressures);
                     pressureUpdated = true;
                     Log.d("Bluetooth", "Pressures updated: " + Arrays.toString(pressures) + " kPa");
                 } else {
@@ -244,7 +238,6 @@ public class BluetoothService {
                 }
             }
 
-            // if both temperature and pressure are updated, update the sensor data
             if (temperatureUpdated && pressureUpdated) {
                 updateSensorData(latestPressures, latestTemperatures);
                 temperatureUpdated = false;
@@ -278,19 +271,16 @@ public class BluetoothService {
             pressureData.put("Lateral", pressures[6]);
             pressureData.put("Calcaneus", pressures[7]);
 
-            // Create a new JSONObject that will hold both the temperature and pressure data
             JSONObject data = new JSONObject();
             data.put("temperature_data", temperatureData);
             data.put("pressure_data", pressureData);
 
-            // put the 'data' object into the main jsonObject
             jsonObject.put("data", data);
         } catch (Exception e) {
             Log.e("BluetoothService", "Failed to create JSON object for sensor data: " + e.getMessage());
             return;
         }
 
-        // update the user's data in the database
         apiService.postData(token, jsonObject, new ApiService.ApiCallback() {
             @Override
             public void onSuccess(String response) {
@@ -362,7 +352,6 @@ public class BluetoothService {
             return new ArrayList<>();
         }
 
-        // Get connected devices for the GATT profile
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
             Log.w("BluetoothService", "getConnectedDevices - Bluetooth scan permission not granted");
             ActivityCompat.requestPermissions((PairingActivity) context, new String[]{Manifest.permission.BLUETOOTH}, 1);

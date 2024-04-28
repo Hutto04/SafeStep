@@ -14,9 +14,7 @@ import com.example.myapplication.R;
 public class ProfileFragment extends Fragment {
     private Fragment currentFragment;
 
-    public ProfileFragment() {
-        // Required empty public constructor
-    }
+    public ProfileFragment() {}
 
     public static ProfileFragment newInstance() {
         return new ProfileFragment();
@@ -56,7 +54,6 @@ public class ProfileFragment extends Fragment {
 
     private void loadFragment(Fragment fragment) {
         currentFragment = fragment;
-        // Replace the fragment
         getChildFragmentManager().beginTransaction()
                 .replace(R.id.profileFragmentContainer, fragment)
                 .commit();

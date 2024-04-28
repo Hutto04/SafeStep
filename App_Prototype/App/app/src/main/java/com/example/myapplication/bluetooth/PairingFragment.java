@@ -34,9 +34,7 @@ public class PairingFragment extends Fragment implements BluetoothService.OnDevi
     private BluetoothService bluetoothService;
     private static final int PERMISSION_REQUEST_CODE = 2;
 
-    public PairingFragment() {
-        // Required empty public constructor
-    }
+    public PairingFragment() {}
 
     public static PairingFragment newInstance() {
         return new PairingFragment();

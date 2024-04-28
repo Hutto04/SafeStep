@@ -41,15 +41,14 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         binding.bottomNavigationView.setVisibility(View.GONE);
-        //replaceFragment(new HomeFragment()); // Start with the Home Fragment - default
-        showHomeFragment(); // Gurpreet: added showHomeFragment(); to go to homefrag
         bluetoothService = BluetoothService.getInstance(this);
 
         // Initialize Python - to call Python functions within Java
         if (!Python.isStarted()) {
             Python.start(new AndroidPlatform(this));
         }
-        //checkBluetoothAndSetupUI(); //commented out to avoid bluetooth_connect permissions
+
+        checkBluetoothAndSetupUI();
     }
 
     private void checkBluetoothAndSetupUI() {
@@ -60,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (!bluetoothAdapter.isEnabled()) {
-            // Request to enable Bluetooth
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
@@ -90,14 +88,11 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 1) {
-            // If request is cancelled, the result arrays are empty.
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission was granted, setup the Bluetooth connection.
                 Log.d("MainActivity", "Permission granted for BLUETOOTH_CONNECT, calling initializeBluetooth()");
                 initializeBluetooth();
             }  else {
                 Log.d("MainActivity", "Permission denied for BLUETOOTH_CONNECT");
-                // ask for permission again
                 ActivityCompat.requestPermissions(this,
                         new String[]{android.Manifest.permission.BLUETOOTH}, 1);
             }
@@ -110,7 +105,6 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.BLUETOOTH}, 1);
             return;
         }
-        // Retrieve a list of connected Bluetooth devices
         List<BluetoothDevice> connectedDevices = bluetoothService.getConnectedDevices();
         Log.d("MainActivity", "Paired devices count: " + connectedDevices.size());
 
@@ -133,9 +127,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Please pair and connect both SmartSocks", Toast.LENGTH_LONG).show();
             Log.d("MainActivity", "Please pair and connect both SmartSocks");
-            //Move to Pairing Activity to pair the 'socks'
-            //Intent intent = new Intent(this, PairingActivity.class);
-            //startActivity(intent);
             replaceFragment(new PairingFragment());
         }
     }

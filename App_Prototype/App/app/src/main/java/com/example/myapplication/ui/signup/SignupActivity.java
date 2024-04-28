@@ -30,14 +30,11 @@ import okhttp3.Response;
 public class SignupActivity extends AppCompatActivity {
 
     private OkHttpClient client;
-    private String url = "http://10.0.2.2:5000/register"; // 10.0.2.2 for emulator, localhost for device
+    private final String url = "http://10.0.2.2:5000/register"; // 10.0.2.2 for emulator, localhost for device
 
     private EditText editTextUsername;
     private EditText editTextPassword;
     private EditText editTextConfirmPassword;
-    private Button signUpButton;
-    private TextView textViewLogin;
-    private TextView textViewForgotPassword;
 
 
     @Override
@@ -50,9 +47,9 @@ public class SignupActivity extends AppCompatActivity {
         editTextUsername = findViewById(R.id.editTextUsername);
         editTextPassword = findViewById(R.id.editTextPassword);
         editTextConfirmPassword = findViewById(R.id.editTextConfirmPassword);
-        signUpButton = findViewById(R.id.signUpButton);
-        textViewLogin = findViewById(R.id.textViewLogin);
-        textViewForgotPassword = findViewById(R.id.textViewForgotPassword);
+        Button signUpButton = findViewById(R.id.signUpButton);
+        TextView textViewLogin = findViewById(R.id.textViewLogin);
+        TextView textViewForgotPassword = findViewById(R.id.textViewForgotPassword);
 
         signUpButton.setOnClickListener(v -> {
             // log username and password
@@ -61,7 +58,6 @@ public class SignupActivity extends AppCompatActivity {
             Log.d("SignupActivity", "Confirm Password: " + editTextConfirmPassword.getText().toString());
 
             // TODO: Check if the password and confirm password match
-
             // Register user
             registerUser(editTextUsername.getText().toString(), editTextPassword.getText().toString());
         });
@@ -80,10 +76,9 @@ public class SignupActivity extends AppCompatActivity {
     }
 
     private void registerUser(String username, String password) {
-        MediaType JSON = MediaType.parse("application/json; charset=utf-8"); // Set JSON media type
-        JSONObject jsonObject = new JSONObject(); // Create JSON object
+        MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+        JSONObject jsonObject = new JSONObject();
         try {
-            // add username and password to the JSON object
             jsonObject.put("username", username);
             jsonObject.put("password", password);
         } catch (JSONException e) {
@@ -107,12 +102,10 @@ public class SignupActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                // No changes needed here, as you've already correctly used runOnUiThread
                 runOnUiThread(() -> {
                     try {
                         if (response.isSuccessful()) {
                             Toast.makeText(SignupActivity.this, "User registered successfully", Toast.LENGTH_SHORT).show();
-                            // Optionally, navigate to LoginActivity upon successful registration
                             Intent intent = new Intent(SignupActivity.this, LoginActivity.class);
                             startActivity(intent);
                             finish();

@@ -59,7 +59,6 @@ public class LoginActivity extends AppCompatActivity {
             String username = editTextUsername.getText().toString();
             String password = editTextPassword.getText().toString();
 
-            // log username and password
             Log.d("LoginActivity", "Username: " + username);
             Log.d("LoginActivity", "Password: " + password);
 
@@ -67,7 +66,6 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         textViewRegister.setOnClickListener(v -> {
-            // Navigate to the SignupActivity
             Log.d("LoginActivity", "Switch to SignupActivity");
             Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
             startActivity(intent);
@@ -76,11 +74,11 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void loginUser(String username, String password) {
-        MediaType JSON = MediaType.parse("application/json; charset=utf-8"); // Set JSON media type
-        JSONObject jsonObject  = new JSONObject(); // Create new JSON Object
+        MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+        JSONObject jsonObject  = new JSONObject();
         try {
-            jsonObject.put("username", username); // Add username to JSON object
-            jsonObject.put("password", password); // Add password to JSON object
+            jsonObject.put("username", username);
+            jsonObject.put("password", password);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -109,16 +107,12 @@ public class LoginActivity extends AppCompatActivity {
                         // save token to shared preferences
                         SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref", MODE_PRIVATE);
                         SharedPreferences.Editor myEdit = sharedPreferences.edit();
-                        // save token to shared preferences
                         myEdit.putString("token", token);
-                        // save username to shared preferences
                         myEdit.putString("username", username);
                         myEdit.apply();
 
-                        // log token
                         Log.d("LoginActivity", "Token: " + token);
 
-                        // Get profile info from DB if any
                         getProfileInformation(token);
 
                         runOnUiThread(() -> {
@@ -132,7 +126,6 @@ public class LoginActivity extends AppCompatActivity {
                         Toast.makeText(LoginActivity.this, "Login failed", Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    // Handle login failure (e.g., incorrect credentials)
                     runOnUiThread(() -> Toast.makeText(LoginActivity.this, "Invalid username or password", Toast.LENGTH_SHORT).show());
                 }
             }

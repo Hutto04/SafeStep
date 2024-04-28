@@ -25,9 +25,7 @@ public class DoctorInfoFragment extends Fragment implements Saveable {
     private EditText doctorEmail;
     private SharedPreferences sharedPreferences;
 
-    public DoctorInfoFragment() {
-        // Required empty public constructor
-    }
+    public DoctorInfoFragment() {}
 
     public static DoctorInfoFragment newInstance(String param1, String param2) {
         DoctorInfoFragment fragment = new DoctorInfoFragment();
@@ -80,7 +78,6 @@ public class DoctorInfoFragment extends Fragment implements Saveable {
             e.printStackTrace();
         }
 
-        // debug
         Log.d("DoctorInfoFragment", "Sending: " + jsonObject);
 
         apiService.updateProfileInformation(token, jsonObject, new ApiService.ApiCallback() {

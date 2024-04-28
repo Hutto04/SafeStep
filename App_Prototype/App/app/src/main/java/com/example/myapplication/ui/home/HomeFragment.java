@@ -42,10 +42,10 @@ public class HomeFragment extends Fragment {
     private ImageView imageView2;
 
     public HomeFragment() {
-        // Required empty public constructor
+
     }
 
-    public static HomeFragment newInstance(String param1, String param2) {
+    public static HomeFragment newInstance() {
         HomeFragment fragment = new HomeFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
@@ -60,7 +60,6 @@ public class HomeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         apiService = ApiService.getInstance();
 
@@ -88,7 +87,6 @@ public class HomeFragment extends Fragment {
             if (isChecked) {
                 // heatmap
                 getHeatMap();
-                // remove image
                 imageView2.setVisibility(View.GONE);
                 Log.d("HomeFragment", "Toggle Button is ON");
             } else {
@@ -129,7 +127,6 @@ public class HomeFragment extends Fragment {
                     Log.d("HomeFragment", "Pressure Data: " + pressureData);
 
                     // Convert JSONArrays to Python lists
-                    // TODO: have a left and right foot pressure data
                     // Extract pressure data for each point
                     double mtk_1 = pressureData.getDouble("MTK-1");
                     double mtk_2 = pressureData.getDouble("MTK-2");
@@ -192,7 +189,6 @@ public class HomeFragment extends Fragment {
 
                     // Get the first object in the array
                     if (jsonArray.length() == 0) {
-                        // TODO: tell the user that there is no data available
                         Log.d("HomeFragment", "No pressure data available");
                         return;
                     }

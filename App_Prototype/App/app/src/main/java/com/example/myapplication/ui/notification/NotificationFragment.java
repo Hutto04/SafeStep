@@ -43,9 +43,7 @@ public class NotificationFragment extends Fragment {
     EditText _txtEmail, _txtMessage;
     Button _btnSend;
 
-    public NotificationFragment() {
-        // Required empty public constructor
-    }
+    public NotificationFragment() {}
 
     public static NotificationFragment newInstance() {
         NotificationFragment fragment = new NotificationFragment();
@@ -63,53 +61,50 @@ public class NotificationFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
         View view = inflater.inflate(R.layout.fragment_notification, container, false);
 
         _txtEmail = view.findViewById(R.id.txtEmail);
         _txtMessage = view.findViewById(R.id.txtMessage);
         _btnSend = view.findViewById(R.id.txtSend);
 
-        _btnSend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.w("NotificationStart","Starting App..");
-                final String username="spiderknight22@gmail.com"; // need to put gmail email inside
-                final String password="szgx muhb zpqi fkfo"; // need to put app password for gmail
-                String messageToSend=_txtMessage.getText().toString();
-                Properties props = new Properties();
-                props.put("mail.smtp.host", "smtp.gmail.com");
-                props.put("mail.smtp.port", "465");
-                props.put("mail.smtp.auth", "true");
-                props.put("mail.smtp.socketFactory.port", "465");
-                props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        _btnSend.setOnClickListener(v -> {
+            Log.w("NotificationStart","Starting App..");
+            final String username="spiderknight22@gmail.com"; // need to put gmail email inside
+            final String password="szgx muhb zpqi fkfo"; // need to put app password for gmail
+            String messageToSend=_txtMessage.getText().toString();
+            Properties props = new Properties();
+            props.put("mail.smtp.host", "smtp.gmail.com");
+            props.put("mail.smtp.port", "465");
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.socketFactory.port", "465");
+            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 
-                Session session = Session.getInstance(props, new javax.mail.Authenticator(){
-                    protected PasswordAuthentication getPasswordAuthentication(){
-                        return new PasswordAuthentication(username, password);
-                    }
-                });
-                Log.w("NotificationPass","Pass Created");
-                try{
-                    session.setDebug(true);
-                    Log.w("NotificationPass","In Try..");
-                    Message message = new MimeMessage(session);
-                    message.setFrom(new InternetAddress(username));
-                    String mail = _txtEmail.getText().toString();
-                    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(_txtEmail.getText().toString()));
-                    message.setSubject("Safe-Step-Notification");
-                    message.setText(messageToSend);
-                    Transport.send(message);
-                    Toast.makeText(getContext(), "email sent successfully", Toast.LENGTH_LONG).show();
-                }catch(MessagingException e){
-                    Log.w("NotificationCatch","In catch");
-                    throw new RuntimeException(e);
-
+            Session session = Session.getInstance(props, new javax.mail.Authenticator(){
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(username, password);
                 }
+            });
+            Log.w("NotificationPass","Pass Created");
+            try{
+                session.setDebug(true);
+                Log.w("NotificationPass","In Try..");
+                Message message = new MimeMessage(session);
+                message.setFrom(new InternetAddress(username));
+                String mail = _txtEmail.getText().toString();
+                message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(mail));
+                message.setSubject("Safe-Step-Notification");
+                message.setText(messageToSend);
+                Transport.send(message);
+                Toast.makeText(getContext(), "email sent successfully", Toast.LENGTH_LONG).show();
+            }catch(MessagingException e){
+                Log.w("NotificationCatch","In catch");
+                throw new RuntimeException(e);
+
             }
         });
-        //StrictMode.ThreadPolicy policy = new StrictMode.Builder().permitAll().build();
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
 
         return view;
     }

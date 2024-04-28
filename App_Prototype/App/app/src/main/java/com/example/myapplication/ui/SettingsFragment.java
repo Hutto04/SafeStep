@@ -12,9 +12,7 @@ import com.example.myapplication.R;
 
 public class SettingsFragment extends Fragment {
 
-    public SettingsFragment() {
-        // Required empty public constructor
-    }
+    public SettingsFragment() {}
 
     public static SettingsFragment newInstance() {
         SettingsFragment fragment = new SettingsFragment();

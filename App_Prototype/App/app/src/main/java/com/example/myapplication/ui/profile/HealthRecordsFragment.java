@@ -13,9 +13,7 @@ import com.example.myapplication.R;
 
 public class HealthRecordsFragment extends Fragment implements Saveable {
 
-    public HealthRecordsFragment() {
-        // Required empty public constructor
-    }
+    public HealthRecordsFragment() {}
     public static HealthRecordsFragment newInstance(String param1, String param2) {
         HealthRecordsFragment fragment = new HealthRecordsFragment();
         Bundle args = new Bundle();

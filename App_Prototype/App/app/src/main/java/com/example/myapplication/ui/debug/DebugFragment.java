@@ -124,12 +124,10 @@ public class DebugFragment extends Fragment {
         });
 
 
-        // Start Python -
         if (!Python.isStarted()) {
             Python.start(new AndroidPlatform(requireContext()));
         }
 
-        // chaquopy - Python SDK so that we can call Python functions within java
         Python py = Python.getInstance();
         PyObject myModule = py.getModule("test");
         PyObject myFnCallVale = myModule.get("simple_sort");
@@ -142,12 +140,10 @@ public class DebugFragment extends Fragment {
             if (isChecked) {
                 // heatmap
                 getHeatMap();
-                // remove image
                 imageView2.setVisibility(View.GONE);
                 Log.d("HomeFragment", "Toggle Button is ON");
             } else {
                 getChart();
-                // bring back image
                 imageView2.setVisibility(View.VISIBLE);
                 Log.d("HomeFragment", "Toggle Button is OFF");
             }
@@ -184,7 +180,6 @@ public class DebugFragment extends Fragment {
                     Log.d("HomeFragment", "Pressure Data: " + pressureData);
 
                     // Convert JSONArrays to Python lists
-                    // TODO: have a left and right foot pressure data
                     // Extract pressure data for each point
                     double mtk_1 = pressureData.getDouble("MTK-1");
                     double mtk_2 = pressureData.getDouble("MTK-2");
@@ -248,7 +243,6 @@ public class DebugFragment extends Fragment {
 
                     // Get the first object in the array
                     if (jsonArray.length() == 0) {
-                        // TODO: tell the user that there is no data available
                         Log.d("HomeFragment", "No pressure data available");
                         return;
                     }
