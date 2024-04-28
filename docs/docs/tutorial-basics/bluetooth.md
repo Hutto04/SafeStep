@@ -34,6 +34,7 @@ from machine import Pin, ADC
 import ubinascii
 from ble_advertising import advertising_payload
 from micropython import const
+import math
 
 # Constants
 _IRQ_CENTRAL_CONNECT = const(1)
@@ -48,6 +49,14 @@ s1 = Pin(1, Pin.OUT)
 s2 = Pin(2, Pin.OUT)
 s3 = Pin(3, Pin.OUT)
 SIG_pin = ADC(0)
+
+def map(val, loval, hival, tolow, tohigh):
+    if loval <= val <= hival:
+        return (val - loval)/(hival-loval)*(tohigh-tolow) + tolow
+    else:
+        raise(ValueError)
+
+
 
 def read_mux(channel):
     control_pin = [s0, s1, s2, s3]
@@ -82,22 +91,80 @@ class BLESensor:
         self._payload = advertising_payload(name=name, services=[self._service_uuid])
         self._advertise()
 
+    
+    def raw_pressure_to_newtons(self,raw_pressure):
+        # voltage is 3.3v or 3300mV
+        fsr_voltage = map(raw_pressure, 0, 65535, 0 , 3300)
+
+        # The voltage = Vcc * R / (R + FSR) where R = 10K and Vcc = 5V
+        # so FSR = ((Vcc - V) * R) / V
+
+        fsr_resistance = 3300 - fsr_voltage
+
+        #10k resistor in microMhos = 1000000
+        fsr_conductance = 1000000/fsr_resistance
+
+        if (fsr_voltage <= 1000):
+            return 0
+        else:
+            return fsr_voltage
+
+
+    def raw_temp_to_f(self,raw_temp):
+        # instead of raw temp decreasing we increase when temp increases 
+
+        samples = []
+        num_of_samples = 8
+        # add values to array to get avg
+        for i in range(num_of_samples):
+            samples.append(raw_temp)
+            time.sleep(0.01)
+
+        # avg the samples
+        avg = sum(samples)/ num_of_samples
+        
+        # make sure you import math
+        # convering the value to resistance 
+        avg = (1023)/( avg - 1) 
+        avg = 10000 / avg
+
+
+        steinhart = 0.0
+        steinhart = avg / 19000
+        steinhart = math.log(steinhart)
+        steinhart /= 3950
+        steinhart += 1.0 / (25 + 273.15)
+        steinhart = 1.0 / steinhart
+        #steinhart -= 273.15
+        steinhart = ((273.15 - steinhart) * -1)
+
+        #converting c to f
+        f =( (abs(steinhart) * 1.8) + 32)
+
+
+        return f
+
+
+
+
     def update_sensors(self):
         temps = []
         pressures = []
-        for i in range(8):  # 8 temperature sensors followed by 8 pressure sensors
-            temp_reading = read_mux(i)
-            pressure_reading = read_mux(i + 8)
-            
-            # Example conversion...
-            converted_temp = round(((temp_reading * 3.3 / 65535) * 100) - 301.89, 2)  # Example
-            converted_pressure = round((pressure_reading * 3.3 / 65535 * 1000) - 3294.06, 2)  # Example conversion
-            
-            if (converted_pressure <= 0):
-                converted_pressure = 0
-            
-            temps.append(converted_temp)
-            pressures.append(converted_pressure)
+        for i in range(16):  # 8 temperature sensors followed by 8 pressure sensors
+            fsr_reading = read_mux(i)
+            if (i<8):
+            # for pressure reading 
+                fsr_reading = self.raw_pressure_to_newtons(fsr_reading)
+                pressures.append((fsr_reading))
+            elif (i >7):
+            # for temp reading 
+                fsr_reading = self.raw_temp_to_f(fsr_reading)
+                temps.append(fsr_reading)
+
+
+           
+            #temps.append(converted_temp)
+            #pressures.append(converted_pressure)
             
             # Print converted values
         print(f"Temperatures: {temps}")  # Print temperature readings in °C
@@ -245,12 +312,11 @@ if __name__ == "__main__":
 ```
 MPY: soft reboot
 Sensor name Pico 28:CD:C1:06:FC:42
-Temperatures: [-3.16, 26.9, 27.87, 26.5, 27.3, 27.06, 27.14, 26.9]
-Pressures: [1.91, 0, 1.11, 4.33, 0, 5.94, 2.72, 5.94]
+Temperatures: [75.12485, 75.03842, 74.93437, 73.95972, 74.81238, 70.35344, 75.19374, 75.17651]
+Pressures: [0, 0, 0, 0, 0, 0, 0, 0]
 --------------
-Temperatures: [26.98, 27.3, 27.38, 27.3, 26.98, 26.82, 27.22, 27.22]
-Pressures: [0, 0, 5.13, 1.11, 5.94, 2.72, 2.72, 5.94]
---------------
+Temperatures: [75.07305, 75.05573, 74.86475, 73.92358, 74.79494, 70.47807, 75.19374, 75.17651]
+Pressures: [0, 0, 0, 0, 0, 0, 0, 0]
 ```
 
 It will update every 15 seconds. To adjust the timing change `time.sleep(15)` to your desired time.
