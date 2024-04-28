@@ -1,6 +1,7 @@
 from machine import Pin, ADC
 from machine import Pin, PWM
 import time
+import math
 
 
 #For the code example I just took the binary table, made it into a simple array, and put it in a function that does this: You give the function a number 0-15. It looks up that number in the binary array, then it loops through those 4 numbers and sets S0, S1, S2, and S3 appropriately. (In the arduino software HIGH is the same as1 & LOW is the same as 0). After it sets the pins so that SIG is connected to the correct channel, it then reads analog 0 (where SIG is connected to) and returns that value. So all you need to do is something like this
@@ -32,9 +33,15 @@ def loop():
     # Reports back Value at channel 6 is: 346
     for i in range(16):
         fsr_reading = read_mux(i)
-        fsr_reading = raw_pressure_to_newtons(fsr_reading)
-        print("sensor ", i, " : ", fsr_reading)
-        #time.sleep(1)  # Delay for 1 second
+        if (i<8):
+            # for pressure reading 
+            #fsr_reading = raw_pressure_to_newtons(fsr_reading)
+            print("sensor ", i, " : ", fsr_reading)
+        else:
+            # for temp reading 
+            #fsr_reading = raw_temp_to_f(fsr_reading)
+            print("sensor ", i, " : ", fsr_reading)
+
     time.sleep(.5)
 
 def read_mux(channel):
@@ -92,9 +99,43 @@ def raw_pressure_to_newtons(raw_pressure):
 
 
 
+def raw_temp_to_f(raw_temp):
+    # instead of raw temp decreasing we increase when temp increases 
+
+    samples = []
+    num_of_samples = 8
+    # add values to array to get avg
+    for i in range(num_of_samples):
+        samples.append(raw_temp)
+        time.sleep(0.01)
+
+    # avg the samples
+    avg = sum(samples)/ num_of_samples
+    
+    # make sure you import math
+    # convering the value to resistance 
+    avg = (1023)/( avg - 1) 
+    avg = 10000 / avg
+
+
+    steinhart = 0.0
+    steinhart = avg / 19000
+    steinhart = math.log(steinhart)
+    steinhart /= 3950
+    steinhart += 1.0 / (25 + 273.15)
+    steinhart = 1.0 / steinhart
+    #steinhart -= 273.15
+    steinhart = ((273.15 - steinhart) * -1)
+
+    #converting c to f
+    f =( (abs(steinhart) * 1.8) + 32)
+
+
+    return f
+
+
 
 ##### TO DO #########
-# need to assign which channels are pressure sensors and temp sensors
 # need to convert raw pressure to newton units and raw temp to F*
 
 
